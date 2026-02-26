@@ -8,64 +8,86 @@ body {
   padding: 0;
   background: #e3f2fd;
   color: #202124;
-  min-width: 260px;
+  min-width: 240px;
   box-sizing: border-box;
 }
 
 .popup {
-  padding: 10px 14px;
+  padding: 12px 14px;
   background: #e3f2fd;
   border: 2px solid #1565c0;
 }
 
 .popup-title {
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #202124;
+  color: #1565c0;
+  text-align: center;
 }
 
 .popup-form {
+  display: block;
+}
+
+.popup-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 20px;
+  align-items: start;
+}
+
+.popup-col {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.popup-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.popup-col-left {
+  justify-content: start;
 }
 
-.popup-row-opa-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.popup-col-right {
+  align-items: stretch;
 }
 
+.popup-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.popup-col-left .popup-cell {
+  justify-content: flex-start;
+}
+
+.popup-col-right .popup-cell {
+  justify-content: flex-end;
+}
+
+.popup-col-right .popup-cell-reset {
+  justify-content: center;
+}
 
 .popup-label {
   flex-shrink: 0;
+  min-width: 32px;
   font-size: 0.875rem;
   color: #5f6368;
 }
 
-.popup-label-fixed {
-  min-width: 36px;
-  width: 36px;
-}
-
 .popup-input {
-  padding: 5px 8px;
+  width: 56px;
+  padding: 4px 6px;
   border: 1px solid #90caf9;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.875rem;
+  box-sizing: border-box;
 }
 
-.popup-input-fixed {
-  width: 56px;
-  min-width: 56px;
-  box-sizing: border-box;
+.popup-cell-buttons {
+  gap: 4px;
 }
 
 .popup-btn-nav {
@@ -86,19 +108,6 @@ body {
   background: #bbdefb;
 }
 
-.popup-row-rowcol-reset {
-  display: flex;
-  align-items: center;
-  gap: 8px 12px;
-  flex-wrap: wrap;
-}
-
-.popup-btn-reset {
-  margin-left: auto;
-  padding: 4px 12px;
-  font-size: 0.8125rem;
-}
-
 .popup-checkbox {
   width: 16px;
   height: 16px;
@@ -107,17 +116,21 @@ body {
 }
 
 .popup-btn {
-  padding: 6px 16px;
   font-size: 0.875rem;
   color: #1565c0;
   background: #fff;
   border: 1px solid #1565c0;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .popup-btn:hover {
   background: #bbdefb;
+}
+
+.popup-btn-reset {
+  padding: 4px 14px;
+  font-size: 0.8125rem;
 }
 
 .huebee__close-button {
