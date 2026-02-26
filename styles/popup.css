@@ -35,7 +35,7 @@ body {
 .popup-grid {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0 8px;
+  gap: 0 2px;
   align-items: start;
 }
 
@@ -77,7 +77,11 @@ body {
 }
 
 .popup-col-right .popup-cell-rowcol {
-  justify-content: space-between;
+  justify-content: flex-start;
+}
+
+.popup-col-right .popup-cell-rowcol .popup-cell-group:last-child {
+  margin-left: auto;
 }
 
 .popup-cell-group {
@@ -95,6 +99,11 @@ body {
   min-width: 28px;
   font-size: 0.875rem;
   color: #5f6368;
+}
+
+.popup-cell-rowcol .popup-label {
+  min-width: 18px;
+  text-align: right;
 }
 
 .popup-input {
