@@ -54,13 +54,17 @@ const applySheetsZoom = (targetZoom) => {
   try {
     const doc = document
 
-    // Ưu tiên tìm ô input Zoom theo aria-label, sau đó tìm button bao quanh
+    // Ưu tiên tìm ô input Zoom theo aria-label, sau đó tìm combobox bao quanh
     const zoomInput = /** @type {HTMLElement | null} */ (
       doc.querySelector('input[aria-label*="Zoom"]')
     )
 
+    // Container chính của Zoom combobox (thường có id="t-zoom" và role="combobox")
     let zoomButton =
-      (zoomInput && zoomInput.closest('div[role="button"]')) || zoomInput?.parentElement || null
+      /** @type {HTMLElement | null} */ (doc.getElementById('t-zoom')) ||
+      (zoomInput && /** @type {HTMLElement | null} */ (zoomInput.closest('[role="combobox"]'))) ||
+      zoomInput?.parentElement ||
+      null
 
     // Fallback: tìm bất kỳ nút nào có text kết thúc bằng '%'
     if (!(zoomButton instanceof HTMLElement)) {
