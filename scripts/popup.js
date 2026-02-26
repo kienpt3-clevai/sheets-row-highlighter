@@ -14,24 +14,26 @@ window.addEventListener('load', () => {
   const lineSizeInput = document.getElementById('lineSize')
   const resetButton = document.getElementById('reset')
 
-  const defaultColor = '#e53935'
+  const defaultColor = '#c2185b'
   const defaultOpacity = '1'
   const defaultRow = true
   const defaultColumn = true
   const defaultLineSize = 2
 
+  const customColors = [
+    '#0e65eb',
+    '#1565c0',
+    '#1b5e20',
+    '#5c0eec',
+    '#6a1b9a',
+    '#c2185b',
+    '#ec0e2f',
+    '#ec930e',
+  ].sort()
+
   const hueb = new Huebee('#color', {
     notation: 'hex',
-    customColors: [
-      '#0e65eb',
-      '#5c0eec',
-      '#ec0ed6',
-      '#ec0e2f',
-      '#ec930e',
-      '#1b5e20',
-      '#1565c0',
-      '#6a1b9a',
-    ],
+    customColors,
     shades: 0,
     hues: 4,
   })
@@ -40,7 +42,7 @@ window.addEventListener('load', () => {
   const save = () => {
     const color = hueb.color
     const opacity = Math.min(
-      Math.max(parseFloat(opacityInput.value, 10) || 1, 0.01),
+      Math.max(parseFloat(opacityInput.value, 10) || 1, 0.1),
       1
     )
     const row = rowInput.checked
@@ -82,6 +84,15 @@ window.addEventListener('load', () => {
     )
 
     hueb.on('change', save)
+  })
+
+  // 次の色へ
+  document.getElementById('nextColor').addEventListener('click', () => {
+    const current = hueb.color?.toLowerCase() ?? ''
+    const idx = customColors.findIndex((c) => c.toLowerCase() === current)
+    const nextIdx = idx < 0 ? 0 : (idx + 1) % customColors.length
+    hueb.setColor(customColors[nextIdx])
+    save()
   })
 
   // 設定読み込み

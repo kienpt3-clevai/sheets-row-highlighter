@@ -13,37 +13,34 @@
       <h1 class="popup-title">Highlighter 1.0</h1>
       <form class="popup-form">
         <div class="popup-row">
-          <label class="popup-label" for="color">Color</label>
-          <input class="popup-input" id="color" />
+          <label class="popup-label popup-label-fixed" for="color">Color</label>
+          <input class="popup-input popup-input-fixed" id="color" />
+          <button type="button" class="popup-btn popup-btn-next" id="nextColor" title="Next color">▶</button>
         </div>
-        <div class="popup-row">
-          <label class="popup-label" for="opacity">Opacity</label>
+        <div class="popup-row popup-row-opa-line">
+          <label class="popup-label popup-label-fixed" for="opacity">Opa</label>
           <input
             type="number"
-            class="popup-input popup-input-num"
+            class="popup-input popup-input-fixed"
             id="opacity"
-            min="0.01"
+            min="0.1"
             max="1"
-            step="0.01"
+            step="0.1"
           />
-        </div>
-        <div class="popup-row">
-          <label class="popup-label popup-label-nowrap" for="lineSize">Line size</label>
+          <label class="popup-label popup-label-fixed" for="lineSize">Line</label>
           <input
             type="number"
-            class="popup-input popup-input-num"
+            class="popup-input popup-input-fixed"
             id="lineSize"
             min="0.5"
             max="5"
             step="0.25"
           />
         </div>
-        <div class="popup-row">
+        <div class="popup-row popup-row-rowcol">
           <label class="popup-label" for="row">Row</label>
           <input type="checkbox" class="popup-checkbox" id="row" />
-        </div>
-        <div class="popup-row">
-          <label class="popup-label" for="column">Column</label>
+          <label class="popup-label" for="column">Col</label>
           <input type="checkbox" class="popup-checkbox" id="column" />
         </div>
         <div class="popup-row popup-row-actions">
