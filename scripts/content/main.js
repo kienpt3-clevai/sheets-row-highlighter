@@ -54,12 +54,15 @@ const applySheetsZoom = (targetZoom) => {
   try {
     const doc = document
 
-    // Try to find the Zoom dropdown button on the toolbar
-    const zoomButton =
-      doc.querySelector('div[role="button"][aria-label*="Zoom"]') ||
-      doc.querySelector('div[role="button"][data-tooltip*="Zoom"]')
+    // Tìm nút Zoom: nút có role=button và text kết thúc bằng '%'
+    const zoomButton = Array.from(
+      doc.querySelectorAll('div[role="button"]')
+    ).find((el) => {
+      const text = el.textContent?.trim() || ''
+      return text.endsWith('%')
+    })
 
-    if (!zoomButton) return
+    if (!(zoomButton instanceof HTMLElement)) return
 
     zoomButton.click()
 

@@ -50,63 +50,7 @@ class RowHighlighterApp {
     /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
 
-    const hasSingleActiveRect =
-      !!activeCellRect && rectList.length === 1
-
-    if (hasSingleActiveRect) {
-      const { x, y, width, height } = activeCellRect
-
-      if (this.isRowEnabled) {
-        const rowTop = y
-        const rowHeight = Math.max(0, height - alignOffset)
-
-        // 左側（アクティブセルの左まで）
-        if (x > 0) {
-          highlightTaskList.push({
-            isRow: true,
-            left: '0px',
-            top: `${rowTop}px`,
-            width: `${x}px`,
-            height: `${rowHeight}px`,
-          })
-        }
-
-        // 右側（アクティブセルの右からシート終わりまで）
-        highlightTaskList.push({
-          isRow: true,
-          left: `${x + width}px`,
-          top: `${rowTop}px`,
-          width: `calc(100% - ${x + width}px)`,
-          height: `${rowHeight}px`,
-        })
-      }
-
-      if (this.isColEnabled) {
-        const colLeft = x
-        const colWidth = Math.max(0, width - alignOffset)
-
-        // 上側（アクティブセルの上まで）
-        if (y > 0) {
-          highlightTaskList.push({
-            isRow: false,
-            left: `${colLeft}px`,
-            top: '0px',
-            width: `${colWidth}px`,
-            height: `${y}px`,
-          })
-        }
-
-        // 下側（アクティブセルの下からシート終わりまで）
-        highlightTaskList.push({
-          isRow: false,
-          left: `${colLeft}px`,
-          top: `${y + height}px`,
-          width: `${colWidth}px`,
-          height: `calc(100% - ${y + height}px)`,
-        })
-      }
-    } else {
-      highlightTaskList = (
+    highlightTaskList = (
         this.isRowEnabled
           ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
               isRow: true,
@@ -127,7 +71,6 @@ class RowHighlighterApp {
             }))
           : []
       )
-    }
 
     const diff = highlightTaskList.length - this.elementPool.length
 
@@ -219,7 +162,7 @@ class RowHighlighterApp {
         pointerEvents: 'none',
         display: 'block',
         backgroundColor: this.backgroundColor,
-        opacity: '0.2',
+        opacity: '0.1',
         left: `${x}px`,
         top: `${y}px`,
         width: `${width}px`,
