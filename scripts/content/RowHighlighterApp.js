@@ -29,9 +29,13 @@ class RowHighlighterApp {
       ...this.locator.getSheetContainerStyle(),
     })
 
+    const borderWidth = '2px'
+    const borderStyle = `solid ${this.backgroundColor}`
+
     const highlightTaskList = (
       this.isRowEnabled
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
+            isRow: true,
             left: '0px',
             top: `${y}px`,
             width: '100%',
@@ -41,6 +45,7 @@ class RowHighlighterApp {
     ).concat(
       this.isColEnabled
         ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
+            isRow: false,
             left: `${x}px`,
             top: '0px',
             width: `${width}px`,
@@ -67,14 +72,31 @@ class RowHighlighterApp {
 
     highlightTaskList.forEach((task, index) => {
       const element = this.elementPool[index]
+      const { isRow, ...box } = task
+
+      const border =
+        isRow === true
+          ? {
+              borderTop: `${borderWidth} ${borderStyle}`,
+              borderBottom: `${borderWidth} ${borderStyle}`,
+              borderLeft: 'none',
+              borderRight: 'none',
+            }
+          : {
+              borderLeft: `${borderWidth} ${borderStyle}`,
+              borderRight: `${borderWidth} ${borderStyle}`,
+              borderTop: 'none',
+              borderBottom: 'none',
+            }
 
       Object.assign(element.style, {
         position: 'absolute',
         pointerEvents: 'none',
         display: 'block',
-        backgroundColor: this.backgroundColor,
+        backgroundColor: 'transparent',
         opacity: this.opacity,
-        ...task,
+        ...box,
+        ...border,
       })
     })
   }

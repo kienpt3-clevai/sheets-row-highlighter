@@ -73,14 +73,19 @@ window.addEventListener('load', async () => {
           }, {})
       }
 
-      chrome.storage.local.set({
-        color,
-        opacity,
-        row,
-        column,
-        auto,
-        sheetSettingsMap,
-      })
+      chrome.storage.local.set(
+        {
+          color,
+          opacity,
+          row,
+          column,
+          auto,
+          sheetSettingsMap,
+        },
+        () => {
+          sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
+        }
+      )
     })
   }
 
@@ -94,14 +99,19 @@ window.addEventListener('load', async () => {
     columnInput.checked = defaultColumn
     autoInput.checked = defaultAuto
 
-    chrome.storage.local.set({
-      color: defaultColor,
-      opacity: defaultOpacity,
-      row: defaultRow,
-      column: defaultColumn,
-      auto: defaultAuto,
-      sheetSettingsMap: {},
-    })
+    chrome.storage.local.set(
+      {
+        color: defaultColor,
+        opacity: defaultOpacity,
+        row: defaultRow,
+        column: defaultColumn,
+        auto: defaultAuto,
+        sheetSettingsMap: {},
+      },
+      () => {
+        sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
+      }
+    )
 
     hueb.on('change', save)
   })

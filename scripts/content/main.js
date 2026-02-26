@@ -52,9 +52,13 @@ storage.local.get(['sheetSettingsMap'], ({ sheetSettingsMap }) => {
   storage.onChanged.addListener(loadSettings)
 })
 
-// popupからのgetSheetKey応答処理
+// popupからのgetSheetKey応答処理 / 設定更新時の再描画
 // @ts-ignore chrome.xxxの参照エラーを無視
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.type === 'settingsUpdated') {
+    loadSettings()
+    return
+  }
   if (message.type !== 'getSheetKey') {
     return
   }
