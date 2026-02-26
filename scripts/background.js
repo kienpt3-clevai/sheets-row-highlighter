@@ -2,7 +2,7 @@ const defaultRow = true
 const defaultColumn = false
 const zoomPresets = [50, 75, 90, 100, 125]
 
-chrome.commands.onCommand.addListener((command) => {
+const handleCommand = (command) => {
   chrome.storage.local.get(['row', 'column', 'zoomIndex'], (items) => {
     let row = items.row ?? defaultRow
     let column = items.column ?? defaultColumn
@@ -58,4 +58,14 @@ chrome.commands.onCommand.addListener((command) => {
         .catch(() => {})
     }
   })
+}
+
+chrome.commands.onCommand.addListener((command) => {
+  handleCommand(command)
+})
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === 'cycleZoomOut' || message?.type === 'cycleZoomIn') {
+    handleCommand(message.type)
+  }
 })

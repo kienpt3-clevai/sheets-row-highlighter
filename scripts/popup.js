@@ -13,6 +13,8 @@ window.addEventListener('load', () => {
   const columnInput = document.getElementById('column')
   const lineSizeInput = document.getElementById('lineSize')
   const resetButton = document.getElementById('reset')
+  const zoomOutBtn = document.getElementById('zoomOutBtn')
+  const zoomInBtn = document.getElementById('zoomInBtn')
 
   const defaultColor = '#c2185b'
   const defaultOpacity = '1'
@@ -97,6 +99,18 @@ window.addEventListener('load', () => {
 
   document.getElementById('prevColor').addEventListener('click', () => cycleColor(-1))
   document.getElementById('nextColor').addEventListener('click', () => cycleColor(1))
+
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ type: 'cycleZoomOut' }).catch(() => {})
+    })
+  }
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ type: 'cycleZoomIn' }).catch(() => {})
+    })
+  }
 
   // 設定読み込み
   chrome.storage.local.get(

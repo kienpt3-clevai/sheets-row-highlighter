@@ -39,7 +39,7 @@ class RowHighlighterApp {
     const borderStyle = `solid ${this.backgroundColor}`
     const alignOffset = this.lineSize
 
-    /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string, isCell?: boolean}>} */
+    /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
 
     const hasSingleActiveRect =
@@ -49,7 +49,7 @@ class RowHighlighterApp {
       const { x, y, width, height } = activeCellRect
 
       if (this.isRowEnabled) {
-        const rowTop = y + alignOffset
+        const rowTop = y
         const rowHeight = Math.max(0, height - alignOffset)
 
         // 左側（アクティブセルの左まで）
@@ -74,7 +74,7 @@ class RowHighlighterApp {
       }
 
       if (this.isColEnabled) {
-        const colLeft = x + alignOffset
+        const colLeft = x
         const colWidth = Math.max(0, width - alignOffset)
 
         // 上側（アクティブセルの上まで）
@@ -97,25 +97,13 @@ class RowHighlighterApp {
           height: `calc(100% - ${y + height}px)`,
         })
       }
-
-      // 交差セル自体も少し強めにハイライト（行＋列が両方有効な場合）
-      if (this.isRowEnabled && this.isColEnabled) {
-        highlightTaskList.push({
-          isRow: true,
-          isCell: true,
-          left: `${x}px`,
-          top: `${y}px`,
-          width: `${width}px`,
-          height: `${height}px`,
-        })
-      }
     } else {
       highlightTaskList = (
         this.isRowEnabled
           ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
               isRow: true,
               left: '0px',
-              top: `${y + alignOffset}px`,
+              top: `${y}px`,
               width: '100%',
               height: `${Math.max(0, height - alignOffset)}px`,
             }))
@@ -124,7 +112,7 @@ class RowHighlighterApp {
         this.isColEnabled
           ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
               isRow: false,
-              left: `${x + alignOffset}px`,
+              left: `${x}px`,
               top: '0px',
               width: `${Math.max(0, width - alignOffset)}px`,
               height: '100%',
@@ -151,47 +139,29 @@ class RowHighlighterApp {
 
     highlightTaskList.forEach((task, index) => {
       const element = this.elementPool[index]
-      const { isRow, isCell, ...box } = task
+      const { isRow, ...box } = task
 
-      /** @type {Partial<CSSStyleDeclaration>} */
-      let border
-      /** @type {string} */
-      let opacity = this.opacity
-      /** @type {string} */
-      let backgroundColor = 'transparent'
-
-      if (isCell) {
-        border = {
-          borderTop: 'none',
-          borderBottom: 'none',
-          borderLeft: 'none',
-          borderRight: 'none',
-        }
-        backgroundColor = this.backgroundColor
-        opacity = '0.2'
-      } else {
-        border =
-          isRow === true
-            ? {
-                borderTop: `${borderWidth} ${borderStyle}`,
-                borderBottom: `${borderWidth} ${borderStyle}`,
-                borderLeft: 'none',
-                borderRight: 'none',
-              }
-            : {
-                borderLeft: `${borderWidth} ${borderStyle}`,
-                borderRight: `${borderWidth} ${borderStyle}`,
-                borderTop: 'none',
-                borderBottom: 'none',
-              }
-      }
+      const border =
+        isRow === true
+          ? {
+              borderTop: `${borderWidth} ${borderStyle}`,
+              borderBottom: `${borderWidth} ${borderStyle}`,
+              borderLeft: 'none',
+              borderRight: 'none',
+            }
+          : {
+              borderLeft: `${borderWidth} ${borderStyle}`,
+              borderRight: `${borderWidth} ${borderStyle}`,
+              borderTop: 'none',
+              borderBottom: 'none',
+            }
 
       Object.assign(element.style, {
         position: 'absolute',
         pointerEvents: 'none',
         display: 'block',
-        backgroundColor,
-        opacity,
+        backgroundColor: 'transparent',
+        opacity: this.opacity,
         ...box,
         ...border,
       })
