@@ -13,4 +13,5 @@
  * @property {() => Array<HighlightRect>} getHighlightRectList
  * @property {() => Partial<CSSStyleDeclaration>} getSheetContainerStyle
  * @property {() => string} getSheetKey
+ * @property {() => (HighlightRect | null)} [getActiveCellRect]
  */

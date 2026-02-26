@@ -25,6 +25,31 @@ class SheetsActiveCellLocator {
   }
 
   /**
+   * 現在のアクティブセルの Rect を返す（単一選択ベース）
+   * @returns {HighlightRect | null}
+   */
+  getActiveCellRect() {
+    const sheetRect = this._getSheetContainerRect()
+    const activeBorderList = document.getElementsByClassName(
+      this._activeBorderClass
+    )
+
+    if (!sheetRect || activeBorderList.length !== 4) {
+      return null
+    }
+
+    const topBorderRect = activeBorderList[0].getBoundingClientRect()
+    const leftBorderRect = activeBorderList[3].getBoundingClientRect()
+
+    return {
+      x: topBorderRect.x - sheetRect.x,
+      y: topBorderRect.y - sheetRect.y,
+      width: topBorderRect.width,
+      height: leftBorderRect.height,
+    }
+  }
+
+  /**
    * @param {Array<HTMLElement>} activeSelectionList
    * @returns {Array<HighlightRect>}
    */
@@ -159,26 +184,8 @@ class SheetsActiveCellLocator {
 
   /** @returns {Array<HighlightRect>} */
   _getSingleHighlightRectList() {
-    const sheetRect = this._getSheetContainerRect()
-    const activeBorderList = document.getElementsByClassName(
-      this._activeBorderClass
-    )
-
-    if (!sheetRect || activeBorderList.length !== 4) {
-      return []
-    }
-
-    const topBorderRect = activeBorderList[0].getBoundingClientRect()
-    const leftBorderRect = activeBorderList[3].getBoundingClientRect()
-
-    return [
-      {
-        x: topBorderRect.x - sheetRect.x,
-        y: topBorderRect.y - sheetRect.y,
-        width: topBorderRect.width,
-        height: leftBorderRect.height,
-      },
-    ]
+    const rect = this.getActiveCellRect()
+    return rect ? [rect] : []
   }
 
   _getSheetContainerRect() {
