@@ -8,7 +8,8 @@ body {
   padding: 0;
   background: #e3f2fd;
   color: #202124;
-  min-width: 280px;
+  min-width: 0;
+  width: fit-content;
   box-sizing: border-box;
   overflow: visible;
 }
@@ -54,9 +55,9 @@ body {
 
 .popup-col-right {
   align-items: stretch;
-  width: 84px;
-  min-width: 80px;
-  flex-shrink: 1;
+  width: auto;
+  min-width: auto;
+  flex-shrink: 0;
 }
 
 .popup-cell {
