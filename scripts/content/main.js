@@ -42,54 +42,10 @@ loadSettings()
 
 storage.onChanged.addListener(loadSettings)
 
-/**
- * Apply Google Sheets toolbar zoom to the given percentage (e.g. 75, 100).
- * Only runs on docs.google.com; safely no-ops elsewhere.
- * @param {number} targetZoom
- */
-const applySheetsZoom = (targetZoom) => {
-  if (!isSheetsHost) return
-  if (typeof targetZoom !== 'number') return
-
-  try {
-    const scale = Math.max(0.5, Math.min(1.25, targetZoom / 100))
-
-    // Không scale body, để appContainer/headerContainer không bị double-scale.
-    const body = document.body
-    body.style.transform = ''
-    body.style.transformOrigin = ''
-    body.style.width = ''
-    body.style.height = ''
-
-    /** @type {Array<string>} */
-    const selectors = [
-      '#waffle-grid-container',
-      '.fixed4-inner-container',
-      '.grid4-inner-container',
-    ]
-
-    selectors.forEach((sel) => {
-      const el = /** @type {HTMLElement | null} */ (
-        document.querySelector(sel)
-      )
-      if (!el) return
-
-      Object.assign(el.style, {
-        transformOrigin: '0 0',
-        transform: `scale(${scale})`,
-      })
-    })
-  } catch {
-    // Fail silently; do not break other features
-  }
-}
-
-// 設定更新時の再描画 & Zoom コマンド
+// 設定更新時の再描画
 // @ts-ignore chrome.xxxの参照エラーを無視
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'settingsUpdated') {
     loadSettings()
-  } else if (message.type === 'zoomCommand') {
-    applySheetsZoom(message.zoomLevel)
   }
 })
