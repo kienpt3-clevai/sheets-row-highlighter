@@ -17,7 +17,6 @@ body {
   padding: 12px 12px;
   background: #e3f2fd;
   border: 2px solid #1565c0;
-  border-radius: 8px;
   overflow: visible;
 }
 
@@ -35,8 +34,10 @@ body {
 
 .popup-grid {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0 2px;
+  grid-template-columns: auto auto;
+  column-gap: 6px;
+  row-gap: 0;
+  justify-content: center;
   align-items: start;
 }
 
