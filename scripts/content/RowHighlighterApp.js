@@ -46,31 +46,32 @@ class RowHighlighterApp {
     const borderWidth = `${this.lineSize}px`
     const borderStyle = `solid ${this.backgroundColor}`
     const alignOffset = this.lineSize
+    const halfOffset = this.lineSize / 2
 
     /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
 
     highlightTaskList = (
-        this.isRowEnabled
-          ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
-              isRow: true,
-              left: '0px',
-              top: `${y}px`,
-              width: '100%',
-              height: `${Math.max(0, height - alignOffset)}px`,
-            }))
-          : []
-      ).concat(
-        this.isColEnabled
-          ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
-              isRow: false,
-              left: `${x}px`,
-              top: '0px',
-              width: `${Math.max(0, width - alignOffset)}px`,
-              height: '100%',
-            }))
-          : []
-      )
+      this.isRowEnabled
+        ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
+            isRow: true,
+            left: '0px',
+            top: `${Math.max(0, y - halfOffset)}px`,
+            width: '100%',
+            height: `${Math.max(0, height - alignOffset)}px`,
+          }))
+        : []
+    ).concat(
+      this.isColEnabled
+        ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
+            isRow: false,
+            left: `${Math.max(0, x - halfOffset)}px`,
+            top: '0px',
+            width: `${Math.max(0, width - alignOffset)}px`,
+            height: '100%',
+          }))
+        : []
+    )
 
     const diff = highlightTaskList.length - this.elementPool.length
 

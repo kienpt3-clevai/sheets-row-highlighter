@@ -54,13 +54,23 @@ const applySheetsZoom = (targetZoom) => {
   try {
     const doc = document
 
-    // Tìm nút Zoom: nút có role=button và text kết thúc bằng '%'
-    const zoomButton = Array.from(
-      doc.querySelectorAll('div[role="button"]')
-    ).find((el) => {
-      const text = el.textContent?.trim() || ''
-      return text.endsWith('%')
-    })
+    // Ưu tiên tìm ô input Zoom theo aria-label, sau đó tìm button bao quanh
+    const zoomInput = /** @type {HTMLElement | null} */ (
+      doc.querySelector('input[aria-label*="Zoom"]')
+    )
+
+    let zoomButton =
+      (zoomInput && zoomInput.closest('div[role="button"]')) || zoomInput?.parentElement || null
+
+    // Fallback: tìm bất kỳ nút nào có text kết thúc bằng '%'
+    if (!(zoomButton instanceof HTMLElement)) {
+      zoomButton = /** @type {HTMLElement | undefined} */ (
+        Array.from(doc.querySelectorAll('div[role="button"]')).find((el) => {
+          const text = el.textContent?.trim() || ''
+          return text.endsWith('%')
+        })
+      ) || null
+    }
 
     if (!(zoomButton instanceof HTMLElement)) return
 
