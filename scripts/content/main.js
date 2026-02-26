@@ -54,13 +54,30 @@ const applySheetsZoom = (targetZoom) => {
   try {
     const scale = Math.max(0.5, Math.min(1.25, targetZoom / 100))
 
-    const root = document.body
+    // Không scale body, để appContainer/headerContainer không bị double-scale.
+    const body = document.body
+    body.style.transform = ''
+    body.style.transformOrigin = ''
+    body.style.width = ''
+    body.style.height = ''
 
-    Object.assign(root.style, {
-      transformOrigin: '0 0',
-      transform: `scale(${scale})`,
-      width: `${100 / scale}%`,
-      height: `${100 / scale}%`,
+    /** @type {Array<string>} */
+    const selectors = [
+      '#waffle-grid-container',
+      '.fixed4-inner-container',
+      '.grid4-inner-container',
+    ]
+
+    selectors.forEach((sel) => {
+      const el = /** @type {HTMLElement | null} */ (
+        document.querySelector(sel)
+      )
+      if (!el) return
+
+      Object.assign(el.style, {
+        transformOrigin: '0 0',
+        transform: `scale(${scale})`,
+      })
     })
   } catch {
     // Fail silently; do not break other features
