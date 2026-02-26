@@ -78,7 +78,17 @@ const applySheetsZoom = (targetZoom) => {
 
     if (!(zoomButton instanceof HTMLElement)) return
 
-    zoomButton.click()
+    // Trong một số trường hợp, Google Sheets lắng nghe mousedown/up trên phần dropdown,
+    // nên ưu tiên click vào phần mũi tên nếu tồn tại.
+    const arrowTarget =
+      /** @type {HTMLElement | null} */ (
+        zoomButton.querySelector('.goog-toolbar-combo-button-dropdown')
+      ) || zoomButton
+
+    const mouseEventInit = { bubbles: true, cancelable: true }
+    arrowTarget.dispatchEvent(new MouseEvent('mousedown', mouseEventInit))
+    arrowTarget.dispatchEvent(new MouseEvent('mouseup', mouseEventInit))
+    arrowTarget.dispatchEvent(new MouseEvent('click', mouseEventInit))
 
     const label = `${targetZoom}%`
 
