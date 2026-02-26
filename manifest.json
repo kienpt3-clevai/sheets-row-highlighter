@@ -42,6 +42,12 @@
     },
     "toggleBoth": {
       "description": "__MSG_toggleBothDescription__"
+    },
+    "cycleZoomOut": {
+      "description": "Zoom out on Google Sheets toolbar (50–125%)"
+    },
+    "cycleZoomIn": {
+      "description": "Zoom in on Google Sheets toolbar (50–125%)"
     }
   }
 }

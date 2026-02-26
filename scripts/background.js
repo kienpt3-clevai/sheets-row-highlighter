@@ -1,10 +1,12 @@
 const defaultRow = true
 const defaultColumn = false
+const zoomPresets = [50, 75, 90, 100, 125]
 
 chrome.commands.onCommand.addListener((command) => {
-  chrome.storage.local.get(['row', 'column'], (items) => {
+  chrome.storage.local.get(['row', 'column', 'zoomIndex'], (items) => {
     let row = items.row ?? defaultRow
     let column = items.column ?? defaultColumn
+    let zoomIndex = typeof items.zoomIndex === 'number' ? items.zoomIndex : 0
 
     switch (command) {
       case 'toggleRow': {
@@ -25,12 +27,35 @@ chrome.commands.onCommand.addListener((command) => {
         }
         break
       }
+      case 'cycleZoomOut': {
+        zoomIndex =
+          (zoomIndex - 1 + zoomPresets.length) % zoomPresets.length
+        break
+      }
+      case 'cycleZoomIn': {
+        zoomIndex = (zoomIndex + 1) % zoomPresets.length
+        break
+      }
     }
 
-    chrome.storage.local.set({ row, column })
+    chrome.storage.local.set({ row, column, zoomIndex })
 
     chrome.runtime
-      .sendMessage({ type: 'commands', row, column })
+      .sendMessage({
+        type: 'commands',
+        row,
+        column,
+      })
       .catch(() => {})
+
+    if (command === 'cycleZoomOut' || command === 'cycleZoomIn') {
+      const zoomLevel = zoomPresets[zoomIndex]
+      chrome.runtime
+        .sendMessage({
+          type: 'zoomCommand',
+          zoomLevel,
+        })
+        .catch(() => {})
+    }
   })
 })
