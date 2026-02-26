@@ -8,7 +8,7 @@ body {
   padding: 0;
   background: #e3f2fd;
   color: #202124;
-  min-width: 280px;
+  min-width: 260px;
   box-sizing: border-box;
 }
 
@@ -43,15 +43,6 @@ body {
   gap: 10px;
 }
 
-.popup-row-actions {
-  margin-top: 2px;
-  justify-content: center;
-}
-
-.popup-row-rowcol {
-  gap: 6px 12px;
-  flex-wrap: wrap;
-}
 
 .popup-label {
   flex-shrink: 0;
@@ -72,27 +63,40 @@ body {
 }
 
 .popup-input-fixed {
-  width: 72px;
-  min-width: 72px;
+  width: 56px;
+  min-width: 56px;
   box-sizing: border-box;
 }
 
-.popup-btn-next {
+.popup-btn-nav {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   line-height: 1;
   color: #1565c0;
   background: #fff;
   border: 1px solid #1565c0;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.popup-btn-next:hover {
+.popup-btn-nav:hover {
   background: #bbdefb;
+}
+
+.popup-row-rowcol-reset {
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.popup-btn-reset {
+  margin-left: auto;
+  padding: 4px 12px;
+  font-size: 0.8125rem;
 }
 
 .popup-checkbox {

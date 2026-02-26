@@ -86,14 +86,17 @@ window.addEventListener('load', () => {
     hueb.on('change', save)
   })
 
-  // 次の色へ
-  document.getElementById('nextColor').addEventListener('click', () => {
+  const cycleColor = (delta) => {
     const current = hueb.color?.toLowerCase() ?? ''
     const idx = customColors.findIndex((c) => c.toLowerCase() === current)
-    const nextIdx = idx < 0 ? 0 : (idx + 1) % customColors.length
+    const len = customColors.length
+    const nextIdx = idx < 0 ? 0 : (idx + delta + len) % len
     hueb.setColor(customColors[nextIdx])
     save()
-  })
+  }
+
+  document.getElementById('prevColor').addEventListener('click', () => cycleColor(-1))
+  document.getElementById('nextColor').addEventListener('click', () => cycleColor(1))
 
   // 設定読み込み
   chrome.storage.local.get(

@@ -15,7 +15,8 @@
         <div class="popup-row">
           <label class="popup-label popup-label-fixed" for="color">Color</label>
           <input class="popup-input popup-input-fixed" id="color" />
-          <button type="button" class="popup-btn popup-btn-next" id="nextColor" title="Next color">▶</button>
+          <button type="button" class="popup-btn popup-btn-nav" id="prevColor" title="Previous color">◀</button>
+          <button type="button" class="popup-btn popup-btn-nav" id="nextColor" title="Next color">▶</button>
         </div>
         <div class="popup-row popup-row-opa-line">
           <label class="popup-label popup-label-fixed" for="opacity">Opa</label>
@@ -37,14 +38,12 @@
             step="0.25"
           />
         </div>
-        <div class="popup-row popup-row-rowcol">
+        <div class="popup-row popup-row-rowcol-reset">
           <label class="popup-label" for="row">Row</label>
           <input type="checkbox" class="popup-checkbox" id="row" />
           <label class="popup-label" for="column">Col</label>
           <input type="checkbox" class="popup-checkbox" id="column" />
-        </div>
-        <div class="popup-row popup-row-actions">
-          <input class="popup-btn" id="reset" type="button" value="Reset" />
+          <input class="popup-btn popup-btn-reset" id="reset" type="button" value="Reset" />
         </div>
       </form>
     </div>
