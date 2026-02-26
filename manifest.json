@@ -46,13 +46,13 @@
     "cycleZoomOut": {
       "description": "Zoom out on Google Sheets toolbar (50–125%)",
       "suggested_key": {
-        "default": "Ctrl+,"
+        "default": "Ctrl+Comma"
       }
     },
     "cycleZoomIn": {
       "description": "Zoom in on Google Sheets toolbar (50–125%)",
       "suggested_key": {
-        "default": "Ctrl+."
+        "default": "Ctrl+Period"
       }
     }
   }
