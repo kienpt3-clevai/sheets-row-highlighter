@@ -14,9 +14,10 @@ body {
 }
 
 .popup {
-  padding: 12px 14px;
+  padding: 12px 12px;
   background: #e3f2fd;
   border: 2px solid #1565c0;
+  border-radius: 8px;
   overflow: visible;
 }
 
@@ -52,9 +53,9 @@ body {
 
 .popup-col-right {
   align-items: stretch;
-  width: 100px;
-  min-width: 100px;
-  flex-shrink: 0;
+  width: 84px;
+  min-width: 80px;
+  flex-shrink: 1;
 }
 
 .popup-cell {

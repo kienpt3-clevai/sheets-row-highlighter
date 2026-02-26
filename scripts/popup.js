@@ -15,10 +15,10 @@ window.addEventListener('load', () => {
   const resetButton = document.getElementById('reset')
 
   const defaultColor = '#c2185b'
-  const defaultOpacity = '1'
+  const defaultOpacity = '0.8'
   const defaultRow = true
   const defaultColumn = true
-  const defaultLineSize = 2
+  const defaultLineSize = 1.75
 
   const customColors = [
     '#0e65eb',
