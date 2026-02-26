@@ -9,89 +9,47 @@
     <script src="../scripts/popup.js"></script>
   </head>
   <body>
-    <form>
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>A</th>
-            <th>B</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th>1</th>
-            <td colspan="2" class="center">
-              <p class="m-1">Highlighter 1.0</p>
-            </td>
-          </tr>
-          <tr>
-            <th>2</th>
-            <td>
-              <p class="m-1">Color</p>
-            </td>
-            <td>
-              <input class="input m-1" id="color" />
-            </td>
-          </tr>
-          <tr>
-            <th>3</th>
-            <td>
-              <p class="m-1">Opacity</p>
-            </td>
-            <td>
-              <input
-                type="number"
-                class="input m-1"
-                id="opacity"
-                min="0.01"
-                max="1"
-                step="0.01"
-              />
-            </td>
-          </tr>
-          <tr>
-            <th>4</th>
-            <td>
-              <p class="m-1">Row</p>
-            </td>
-            <td class="center">
-              <input type="checkbox" class="m-1" id="row" />
-            </td>
-          </tr>
-          <tr>
-            <th>5</th>
-            <td>
-              <p class="m-1">Column</p>
-            </td>
-            <td class="center">
-              <input type="checkbox" class="m-1" id="column" />
-            </td>
-          </tr>
-          <tr>
-            <th>6</th>
-            <td>
-              <p class="m-1">Line size</p>
-            </td>
-            <td>
-              <input
-                type="number"
-                class="input m-1"
-                id="lineSize"
-                min="0.5"
-                max="5"
-                step="0.1"
-              />
-            </td>
-          </tr>
-          <tr>
-            <th>7</th>
-            <td colspan="2" class="center">
-              <input class="m-1" id="reset" type="button" value="Reset" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </form>
+    <div class="popup">
+      <h1 class="popup-title">Highlighter 1.0</h1>
+      <form class="popup-form">
+        <div class="popup-row">
+          <label class="popup-label" for="color">Color</label>
+          <input class="popup-input" id="color" />
+        </div>
+        <div class="popup-row">
+          <label class="popup-label" for="opacity">Opacity</label>
+          <input
+            type="number"
+            class="popup-input popup-input-num"
+            id="opacity"
+            min="0.01"
+            max="1"
+            step="0.01"
+          />
+        </div>
+        <div class="popup-row">
+          <label class="popup-label popup-label-nowrap" for="lineSize">Line size</label>
+          <input
+            type="number"
+            class="popup-input popup-input-num"
+            id="lineSize"
+            min="0.5"
+            max="5"
+            step="0.25"
+          />
+        </div>
+        <div class="popup-row">
+          <label class="popup-label" for="row">Row</label>
+          <input type="checkbox" class="popup-checkbox" id="row" />
+        </div>
+        <div class="popup-row">
+          <label class="popup-label" for="column">Column</label>
+          <input type="checkbox" class="popup-checkbox" id="column" />
+        </div>
+        <div class="popup-row popup-row-actions">
+          <input class="popup-btn" id="reset" type="button" value="Reset" />
+        </div>
+      </form>
+    </div>
   </body>
 </html>
