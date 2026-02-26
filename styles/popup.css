@@ -8,14 +8,16 @@ body {
   padding: 0;
   background: #e3f2fd;
   color: #202124;
-  min-width: 240px;
+  min-width: 280px;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .popup {
   padding: 12px 14px;
   background: #e3f2fd;
   border: 2px solid #1565c0;
+  overflow: visible;
 }
 
 .popup-title {
@@ -33,29 +35,33 @@ body {
 .popup-grid {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0 20px;
+  gap: 0 8px;
   align-items: start;
 }
 
 .popup-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .popup-col-left {
   justify-content: start;
+  min-width: 0;
 }
 
 .popup-col-right {
   align-items: stretch;
+  width: 100px;
+  min-width: 100px;
+  flex-shrink: 0;
 }
 
 .popup-cell {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 28px;
+  gap: 4px;
+  min-height: 26px;
 }
 
 .popup-col-left .popup-cell {
@@ -66,28 +72,38 @@ body {
   justify-content: flex-end;
 }
 
+.popup-col-right .popup-cell-buttons {
+  justify-content: space-between;
+}
+
+.popup-col-right .popup-cell-rowcol {
+  justify-content: space-between;
+}
+
+.popup-cell-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .popup-col-right .popup-cell-reset {
   justify-content: center;
 }
 
 .popup-label {
   flex-shrink: 0;
-  min-width: 32px;
+  min-width: 28px;
   font-size: 0.875rem;
   color: #5f6368;
 }
 
 .popup-input {
-  width: 56px;
+  width: 52px;
   padding: 4px 6px;
   border: 1px solid #90caf9;
   border-radius: 4px;
   font-size: 0.875rem;
   box-sizing: border-box;
-}
-
-.popup-cell-buttons {
-  gap: 4px;
 }
 
 .popup-btn-nav {
@@ -129,8 +145,11 @@ body {
 }
 
 .popup-btn-reset {
-  padding: 4px 14px;
+  display: block;
+  width: 100%;
+  padding: 4px 10px;
   font-size: 0.8125rem;
+  box-sizing: border-box;
 }
 
 .huebee__close-button {
