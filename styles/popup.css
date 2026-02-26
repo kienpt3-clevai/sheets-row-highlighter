@@ -8,8 +8,7 @@ body {
   padding: 0;
   background: #e3f2fd;
   color: #202124;
-  min-width: 0;
-  width: fit-content;
+  min-width: 260px;
   box-sizing: border-box;
   overflow: visible;
 }
