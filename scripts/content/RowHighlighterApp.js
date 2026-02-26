@@ -31,6 +31,7 @@ class RowHighlighterApp {
 
     const borderWidth = '2px'
     const borderStyle = `solid ${this.backgroundColor}`
+    const alignOffset = 2
 
     const highlightTaskList = (
       this.isRowEnabled
@@ -39,7 +40,7 @@ class RowHighlighterApp {
             left: '0px',
             top: `${y}px`,
             width: '100%',
-            height: `${height}px`,
+            height: `${Math.max(0, height - alignOffset)}px`,
           }))
         : []
     ).concat(
@@ -48,7 +49,7 @@ class RowHighlighterApp {
             isRow: false,
             left: `${x}px`,
             top: '0px',
-            width: `${width}px`,
+            width: `${Math.max(0, width - alignOffset)}px`,
             height: '100%',
           }))
         : []
