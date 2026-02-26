@@ -185,31 +185,7 @@ class SheetsActiveCellLocator {
   /** @returns {Array<HighlightRect>} */
   _getSingleHighlightRectList() {
     const rect = this.getActiveCellRect()
-
-    if (!rect) {
-      return []
-    }
-
-    const sheetRect = this._getSheetContainerRect()
-    if (!sheetRect) {
-      return []
-    }
-
-    const tolerance = 2
-
-    // Nếu là chọn full row hoặc full column (Ctrl+Space / Shift+Space) thì không highlight
-    const isFullRow =
-      rect.width >= sheetRect.width - tolerance &&
-      rect.height <= sheetRect.height
-    const isFullCol =
-      rect.height >= sheetRect.height - tolerance &&
-      rect.width <= sheetRect.width
-
-    if (isFullRow || isFullCol) {
-      return []
-    }
-
-    return [rect]
+    return rect ? [rect] : []
   }
 
   _getSheetContainerRect() {

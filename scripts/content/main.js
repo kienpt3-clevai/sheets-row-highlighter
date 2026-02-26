@@ -52,107 +52,16 @@ const applySheetsZoom = (targetZoom) => {
   if (typeof targetZoom !== 'number') return
 
   try {
-    const doc = document
+    const scale = Math.max(0.5, Math.min(1.25, targetZoom / 100))
 
-    // Ưu tiên tìm ô input Zoom theo aria-label, sau đó tìm combobox bao quanh
-    const zoomInput = /** @type {HTMLElement | null} */ (
-      doc.querySelector('input[aria-label*="Zoom"]')
-    )
+    const root = document.body
 
-    // Container chính của Zoom combobox (thường có id="t-zoom" và role="combobox")
-    let zoomButton =
-      /** @type {HTMLElement | null} */ (doc.getElementById('t-zoom')) ||
-      (zoomInput && /** @type {HTMLElement | null} */ (zoomInput.closest('[role="combobox"]'))) ||
-      (zoomInput && zoomInput.parentElement) ||
-      null
-
-    const label = `${targetZoom}%`
-
-    // Cách 1: chỉnh trực tiếp value của input Zoom rồi bắn sự kiện như người dùng gõ và Enter
-    if (zoomInput instanceof HTMLInputElement) {
-      zoomInput.focus()
-      zoomInput.value = label
-
-      zoomInput.dispatchEvent(
-        new InputEvent('input', {
-          bubbles: true,
-          cancelable: true,
-          inputType: 'insertReplacementText',
-          data: label,
-        })
-      )
-
-      zoomInput.dispatchEvent(
-        new Event('change', {
-          bubbles: true,
-          cancelable: true,
-        })
-      )
-
-      const keyEventInit = {
-        bubbles: true,
-        cancelable: true,
-        key: 'Enter',
-        code: 'Enter',
-        keyCode: 13,
-        which: 13,
-      }
-
-      zoomInput.dispatchEvent(new KeyboardEvent('keydown', keyEventInit))
-      zoomInput.dispatchEvent(new KeyboardEvent('keyup', keyEventInit))
-
-      return
-    }
-
-    // Fallback: mở dropdown và chọn option như trước (phòng trường hợp input không tìm được)
-    if (!(zoomButton instanceof HTMLElement)) return
-
-    const arrowTarget =
-      /** @type {HTMLElement | null} */ (
-        zoomButton.querySelector('.goog-toolbar-combo-button-dropdown')
-      ) ||
-      /** @type {HTMLElement | null} */ (
-        zoomButton.querySelector('.goog-toolbar-combo-button-inner-box')
-      ) ||
-      zoomButton
-
-    const mouseEventInit = {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-      button: 0,
-      buttons: 1,
-    }
-    arrowTarget.dispatchEvent(new MouseEvent('mousedown', mouseEventInit))
-    arrowTarget.dispatchEvent(new MouseEvent('mouseup', mouseEventInit))
-    arrowTarget.dispatchEvent(new MouseEvent('click', mouseEventInit))
-
-    const label = `${targetZoom}%`
-
-    const trySelect = () => {
-      const menu =
-        doc.querySelector('div[role="menu"]') ||
-        doc.querySelector('[role="menu"][jsname]')
-      if (!menu) return
-
-      const items = Array.from(
-        menu.querySelectorAll(
-          '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]'
-        )
-      )
-
-      const targetItem = items.find((el) => {
-        const text = el.textContent
-        return text && text.trim() === label
-      })
-
-      if (targetItem instanceof HTMLElement) {
-        targetItem.click()
-      }
-    }
-
-    // Allow menu DOM to render before querying items
-    setTimeout(trySelect, 50)
+    Object.assign(root.style, {
+      transformOrigin: '0 0',
+      transform: `scale(${scale})`,
+      width: `${100 / scale}%`,
+      height: `${100 / scale}%`,
+    })
   } catch {
     // Fail silently; do not break other features
   }
