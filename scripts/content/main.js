@@ -63,29 +63,66 @@ const applySheetsZoom = (targetZoom) => {
     let zoomButton =
       /** @type {HTMLElement | null} */ (doc.getElementById('t-zoom')) ||
       (zoomInput && /** @type {HTMLElement | null} */ (zoomInput.closest('[role="combobox"]'))) ||
-      zoomInput?.parentElement ||
+      (zoomInput && zoomInput.parentElement) ||
       null
 
-    // Fallback: tìm bất kỳ nút nào có text kết thúc bằng '%'
-    if (!(zoomButton instanceof HTMLElement)) {
-      zoomButton = /** @type {HTMLElement | undefined} */ (
-        Array.from(doc.querySelectorAll('div[role="button"]')).find((el) => {
-          const text = el.textContent?.trim() || ''
-          return text.endsWith('%')
+    const label = `${targetZoom}%`
+
+    // Cách 1: chỉnh trực tiếp value của input Zoom rồi bắn sự kiện như người dùng gõ và Enter
+    if (zoomInput instanceof HTMLInputElement) {
+      zoomInput.focus()
+      zoomInput.value = label
+
+      zoomInput.dispatchEvent(
+        new InputEvent('input', {
+          bubbles: true,
+          cancelable: true,
+          inputType: 'insertReplacementText',
+          data: label,
         })
-      ) || null
+      )
+
+      zoomInput.dispatchEvent(
+        new Event('change', {
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+
+      const keyEventInit = {
+        bubbles: true,
+        cancelable: true,
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        which: 13,
+      }
+
+      zoomInput.dispatchEvent(new KeyboardEvent('keydown', keyEventInit))
+      zoomInput.dispatchEvent(new KeyboardEvent('keyup', keyEventInit))
+
+      return
     }
 
+    // Fallback: mở dropdown và chọn option như trước (phòng trường hợp input không tìm được)
     if (!(zoomButton instanceof HTMLElement)) return
 
-    // Trong một số trường hợp, Google Sheets lắng nghe mousedown/up trên phần dropdown,
-    // nên ưu tiên click vào phần mũi tên nếu tồn tại.
     const arrowTarget =
       /** @type {HTMLElement | null} */ (
         zoomButton.querySelector('.goog-toolbar-combo-button-dropdown')
-      ) || zoomButton
+      ) ||
+      /** @type {HTMLElement | null} */ (
+        zoomButton.querySelector('.goog-toolbar-combo-button-inner-box')
+      ) ||
+      zoomButton
 
-    const mouseEventInit = { bubbles: true, cancelable: true }
+    const mouseEventInit = {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      button: 0,
+      buttons: 1,
+    }
     arrowTarget.dispatchEvent(new MouseEvent('mousedown', mouseEventInit))
     arrowTarget.dispatchEvent(new MouseEvent('mouseup', mouseEventInit))
     arrowTarget.dispatchEvent(new MouseEvent('click', mouseEventInit))
