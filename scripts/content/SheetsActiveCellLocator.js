@@ -205,6 +205,59 @@ class SheetsActiveCellLocator {
     }
   }
 
+  /**
+   * アクティブセルに対応する列ヘッダーと行ヘッダーの Rect を返す
+   * （ブラウザ座標系での位置）
+   * @returns {Array<HighlightRect>}
+   */
+  getHeaderHighlightRectList() {
+    const activeRect = this.getActiveCellRect?.()
+    const sheetRect = this._getSheetContainerRect()
+
+    if (!activeRect || !sheetRect) {
+      return []
+    }
+
+    const colHeaderContainer = document.querySelector(
+      '.fixed4-inner-container'
+    )
+    const rowHeaderContainer = document.querySelector(
+      '.grid4-inner-container'
+    )
+
+    if (!(colHeaderContainer instanceof HTMLElement) || !(rowHeaderContainer instanceof HTMLElement)) {
+      return []
+    }
+
+    const colHeaderRect = colHeaderContainer.getBoundingClientRect()
+    const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
+
+    // アクティブセルのブラウザ座標
+    const cellLeft = sheetRect.x + activeRect.x
+    const cellTop = sheetRect.y + activeRect.y
+
+    /** @type {Array<HighlightRect>} */
+    const result = []
+
+    // 列ヘッダー（例: T）
+    result.push({
+      x: cellLeft,
+      y: colHeaderRect.y,
+      width: activeRect.width,
+      height: colHeaderRect.height,
+    })
+
+    // 行ヘッダー（例: 23）
+    result.push({
+      x: rowHeaderRect.x,
+      y: cellTop,
+      width: rowHeaderRect.width,
+      height: activeRect.height,
+    })
+
+    return result
+  }
+
   getSheetKey() {
     const { pathname } = location
     return pathname.match(/d\/([^/]*)/)?.[1] || pathname

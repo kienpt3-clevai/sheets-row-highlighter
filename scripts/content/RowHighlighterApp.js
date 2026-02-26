@@ -13,6 +13,14 @@ class RowHighlighterApp {
     /** @type {Array<HTMLElement>} */
     this.elementPool = []
 
+    /** @type {HTMLElement} */
+    this.headerContainer = document.createElement('div')
+    this.headerContainer.id = 'rh-header-container'
+    document.body.appendChild(this.headerContainer)
+
+    /** @type {Array<HTMLElement>} */
+    this.headerElementPool = []
+
     this.backgroundColor = '#0e65eb'
     this.opacity = '0.1'
     this.lineSize = 2
@@ -164,6 +172,59 @@ class RowHighlighterApp {
         opacity: this.opacity,
         ...box,
         ...border,
+      })
+    })
+
+    // =======================
+    // Header highlight (T / 23)
+    // =======================
+    /** @type {Array<HighlightRect>} */
+    const headerRects =
+      typeof this.locator.getHeaderHighlightRectList === 'function'
+        ? this.locator.getHeaderHighlightRectList()
+        : []
+
+    Object.assign(this.headerContainer.style, {
+      position: 'absolute',
+      pointerEvents: 'none',
+      left: '0px',
+      top: '0px',
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden',
+    })
+
+    const headerDiff = headerRects.length - this.headerElementPool.length
+
+    if (0 < headerDiff) {
+      Array.from({ length: headerDiff }).forEach(() => {
+        const element = document.createElement('div')
+        this.headerElementPool.push(element)
+        this.headerContainer.appendChild(element)
+      })
+    }
+
+    if (headerDiff < 0) {
+      this.headerElementPool.slice(headerDiff).forEach((element) => {
+        element.style.display = 'none'
+      })
+    }
+
+    headerRects.forEach((rect, index) => {
+      const element = this.headerElementPool[index]
+      const { x, y, width, height } = rect
+
+      Object.assign(element.style, {
+        position: 'absolute',
+        pointerEvents: 'none',
+        display: 'block',
+        backgroundColor: this.backgroundColor,
+        opacity: '0.2',
+        left: `${x}px`,
+        top: `${y}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+        border: 'none',
       })
     })
   }
