@@ -15,6 +15,7 @@ class RowHighlighterApp {
 
     this.backgroundColor = '#0e65eb'
     this.opacity = '0.1'
+    this.lineSize = 2
     this.isRowEnabled = true
     this.isColEnabled = false
   }
@@ -29,9 +30,9 @@ class RowHighlighterApp {
       ...this.locator.getSheetContainerStyle(),
     })
 
-    const borderWidth = '2px'
+    const borderWidth = `${this.lineSize}px`
     const borderStyle = `solid ${this.backgroundColor}`
-    const alignOffset = 2
+    const alignOffset = this.lineSize
 
     const highlightTaskList = (
       this.isRowEnabled

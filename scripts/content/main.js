@@ -23,45 +23,28 @@ window.addEventListener('scroll', updateHighlight, true)
 
 // @ts-ignore chrome.xxxの参照エラーを無視
 const storage = chrome.storage
-const sheetKey = locator.getSheetKey()
 
 const loadSettings = () => {
   storage.local.get(
-    ['color', 'opacity', 'row', 'column', 'auto', 'sheetSettingsMap'],
+    ['color', 'opacity', 'row', 'column', 'lineSize'],
     (/** @type {any} */ items) => {
-      const { color, opacity, row, column } =
-        (items.auto && items.sheetSettingsMap?.[sheetKey]) || items
-
-      app.backgroundColor = color ?? app.backgroundColor
-      app.opacity = opacity ?? app.opacity
-      app.isRowEnabled = row ?? app.isRowEnabled
-      app.isColEnabled = column ?? app.isColEnabled
+      app.backgroundColor = items.color ?? app.backgroundColor
+      app.opacity = items.opacity ?? app.opacity
+      app.isRowEnabled = items.row ?? app.isRowEnabled
+      app.isColEnabled = items.column ?? app.isColEnabled
+      app.lineSize = items.lineSize ?? app.lineSize
       updateHighlight()
     }
   )
 }
 loadSettings()
 
-storage.local.get(['sheetSettingsMap'], ({ sheetSettingsMap }) => {
-  if (sheetSettingsMap?.[sheetKey]) {
-    sheetSettingsMap[sheetKey].lastAccess = Date.now()
-    storage.local.set({ sheetSettingsMap })
-  }
+storage.onChanged.addListener(loadSettings)
 
-  // 設定変更時に再読み込み
-  storage.onChanged.addListener(loadSettings)
-})
-
-// popupからのgetSheetKey応答処理 / 設定更新時の再描画
+// 設定更新時の再描画
 // @ts-ignore chrome.xxxの参照エラーを無視
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'settingsUpdated') {
     loadSettings()
-    return
   }
-  if (message.type !== 'getSheetKey') {
-    return
-  }
-
-  sendResponse(sheetKey)
 })

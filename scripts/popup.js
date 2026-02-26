@@ -7,22 +7,18 @@ const sendMessageToActiveTab = async (message) => {
   return chrome.tabs.sendMessage(tab.id, message)
 }
 
-window.addEventListener('load', async () => {
-  const sheetKey = await sendMessageToActiveTab({ type: 'getSheetKey' }).catch(
-    () => {}
-  )
-
+window.addEventListener('load', () => {
   const opacityInput = document.getElementById('opacity')
   const rowInput = document.getElementById('row')
   const columnInput = document.getElementById('column')
-  const autoInput = document.getElementById('auto')
+  const lineSizeInput = document.getElementById('lineSize')
   const resetButton = document.getElementById('reset')
 
-  const defaultColor = '#0e65eb'
-  const defaultOpacity = '0.1'
+  const defaultColor = '#e53935'
+  const defaultOpacity = '1'
   const defaultRow = true
-  const defaultColumn = false
-  const defaultAuto = false
+  const defaultColumn = true
+  const defaultLineSize = 2
 
   const hueb = new Huebee('#color', {
     notation: 'hex',
@@ -43,61 +39,34 @@ window.addEventListener('load', async () => {
   // 設定保存
   const save = () => {
     const color = hueb.color
-    const opacity = Math.min(Math.max(opacityInput.value, 0.01), 0.5)
+    const opacity = Math.min(
+      Math.max(parseFloat(opacityInput.value, 10) || 1, 0.01),
+      1
+    )
     const row = rowInput.checked
     const column = columnInput.checked
-    const auto = autoInput.checked
+    const lineSize = Math.min(
+      Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
+      5
+    )
 
-    chrome.storage.local.get(['sheetSettingsMap'], ({ sheetSettingsMap }) => {
-      sheetSettingsMap ??= {}
-
-      if (auto && sheetKey) {
-        sheetSettingsMap[sheetKey] = {
-          color,
-          opacity,
-          row,
-          column,
-          lastAccess: Date.now(),
-        }
+    chrome.storage.local.set(
+      { color, opacity, row, column, lineSize },
+      () => {
+        sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
       }
-
-      const sheetSettingsLimit = 250
-
-      if (sheetSettingsLimit < Object.keys(sheetSettingsMap).length) {
-        sheetSettingsMap = Object.entries(sheetSettingsMap)
-          .sort((a, b) => b[1].lastAccess - a[1].lastAccess)
-          .slice(0, sheetSettingsLimit)
-          .reduce((acc, cur) => {
-            acc[cur[0]] = cur[1]
-            return acc
-          }, {})
-      }
-
-      chrome.storage.local.set(
-        {
-          color,
-          opacity,
-          row,
-          column,
-          auto,
-          sheetSettingsMap,
-        },
-        () => {
-          sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
-        }
-      )
-    })
+    )
   }
 
   // 設定リセット
   resetButton.addEventListener('click', () => {
-    hueb.off('change', save) // huebeeのchangeイベント発火を一時的に無効化
+    hueb.off('change', save)
 
     hueb.setColor(defaultColor)
     opacityInput.value = defaultOpacity
     rowInput.checked = defaultRow
     columnInput.checked = defaultColumn
-    autoInput.checked = defaultAuto
+    lineSizeInput.value = defaultLineSize
 
     chrome.storage.local.set(
       {
@@ -105,8 +74,7 @@ window.addEventListener('load', async () => {
         opacity: defaultOpacity,
         row: defaultRow,
         column: defaultColumn,
-        auto: defaultAuto,
-        sheetSettingsMap: {},
+        lineSize: defaultLineSize,
       },
       () => {
         sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
@@ -118,23 +86,19 @@ window.addEventListener('load', async () => {
 
   // 設定読み込み
   chrome.storage.local.get(
-    ['color', 'opacity', 'row', 'column', 'auto', 'sheetSettingsMap'],
+    ['color', 'opacity', 'row', 'column', 'lineSize'],
     (items) => {
-      const { color, opacity, row, column } =
-        (sheetKey && items.auto && items.sheetSettingsMap?.[sheetKey]) || items
+      hueb.setColor(items.color ?? defaultColor)
+      opacityInput.value = items.opacity ?? defaultOpacity
+      rowInput.checked = items.row ?? defaultRow
+      columnInput.checked = items.column ?? defaultColumn
+      lineSizeInput.value = items.lineSize ?? defaultLineSize
 
-      hueb.setColor(color ?? defaultColor)
-      opacityInput.value = opacity ?? defaultOpacity
-      rowInput.checked = row ?? defaultRow
-      columnInput.checked = column ?? defaultColumn
-      autoInput.checked = items.auto ?? defaultAuto
-
-      // 値が変更されたときに保存
       hueb.on('change', save)
       opacityInput.addEventListener('change', save)
       rowInput.addEventListener('change', save)
       columnInput.addEventListener('change', save)
-      autoInput.addEventListener('change', save)
+      lineSizeInput.addEventListener('change', save)
     }
   )
 
