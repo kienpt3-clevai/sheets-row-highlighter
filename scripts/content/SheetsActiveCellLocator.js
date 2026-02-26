@@ -35,6 +35,8 @@ class SheetsActiveCellLocator {
       return []
     }
 
+    const tolerance = 2
+
     /** @type {Array<HighlightRect>} */
     const activeSelectionRectList = activeSelectionList.map((element) => {
       const { x, y, width, height } = element.getBoundingClientRect()
@@ -46,8 +48,16 @@ class SheetsActiveCellLocator {
       }
     })
 
+    // 複数rectで full row/column になっているか（Shift+Space / Ctrl+Space）
+    if (this._isFullRowOrColumnSelection(activeSelectionRectList, sheetRect, tolerance)) {
+      return []
+    }
+
+    // 1 rect で full row/column のもの（width/height が sheet 以上）
     const rowOrColumnRectList = activeSelectionRectList.filter(
-      (rect) => sheetRect.width < rect.width || sheetRect.height < rect.height
+      (rect) =>
+        rect.width >= sheetRect.width - tolerance ||
+        rect.height >= sheetRect.height - tolerance
     )
 
     // 行か列選択と同じ位置のセルを除外して返す
@@ -59,6 +69,92 @@ class SheetsActiveCellLocator {
             : rect.x === x && rect.width === width
         )
     )
+  }
+
+  /**
+   * 複数の rect をまとめたときに full row または full column になっているか
+   * @param {Array<HighlightRect>} rectList
+   * @param {DOMRect} sheetRect
+   * @param {number} tolerance
+   * @returns {boolean}
+   */
+  _isFullRowOrColumnSelection(rectList, sheetRect, tolerance) {
+    if (rectList.length === 0) return false
+
+    // 同じ行の rect をマージして幅を計算 → 幅が sheet 以上なら full row
+    const rowGroups = this._groupRectsByRow(rectList, tolerance)
+    for (const group of rowGroups) {
+      const left = Math.min(...group.map((r) => r.x))
+      const right = Math.max(...group.map((r) => r.x + r.width))
+      if (right - left >= sheetRect.width - tolerance) return true
+    }
+
+    // 同じ列の rect をマージして高さを計算 → 高さが sheet 以上なら full column
+    const colGroups = this._groupRectsByColumn(rectList, tolerance)
+    for (const group of colGroups) {
+      const top = Math.min(...group.map((r) => r.y))
+      const bottom = Math.max(...group.map((r) => r.y + r.height))
+      if (bottom - top >= sheetRect.height - tolerance) return true
+    }
+
+    return false
+  }
+
+  /**
+   * @param {Array<HighlightRect>} rectList
+   * @param {number} tolerance
+   * @returns {Array<Array<HighlightRect>>}
+   */
+  _groupRectsByRow(rectList, tolerance) {
+    return this._groupRectsByOverlap(rectList, tolerance, 'y', 'height')
+  }
+
+  /**
+   * @param {Array<HighlightRect>} rectList
+   * @param {number} tolerance
+   * @returns {Array<Array<HighlightRect>>}
+   */
+  _groupRectsByColumn(rectList, tolerance) {
+    return this._groupRectsByOverlap(rectList, tolerance, 'x', 'width')
+  }
+
+  /**
+   * Group rects that overlap along one axis (transitively).
+   * @param {Array<HighlightRect>} rectList
+   * @param {number} tolerance
+   * @param {'x' | 'y'} pos
+   * @param {'width' | 'height'} size
+   * @returns {Array<Array<HighlightRect>>}
+   */
+  _groupRectsByOverlap(rectList, tolerance, pos, size) {
+    const used = new Set()
+    const groups = []
+
+    for (let i = 0; i < rectList.length; i++) {
+      if (used.has(i)) continue
+      const group = [rectList[i]]
+      used.add(i)
+      let added = true
+      while (added) {
+        added = false
+        for (let j = 0; j < rectList.length; j++) {
+          if (used.has(j)) continue
+          const b = rectList[j]
+          const overlaps = group.some((a) => {
+            const aEnd = a[pos] + a[size] + tolerance
+            const bEnd = b[pos] + b[size] + tolerance
+            return a[pos] < bEnd && b[pos] < aEnd
+          })
+          if (overlaps) {
+            group.push(rectList[j])
+            used.add(j)
+            added = true
+          }
+        }
+      }
+      groups.push(group)
+    }
+    return groups
   }
 
   /** @returns {Array<HighlightRect>} */
