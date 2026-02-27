@@ -61,7 +61,8 @@ class RowHighlighterApp {
             isRow: true,
             // Cắt line đỏ ngang theo R.left, không vượt qua phần header
             left: `${Math.max(0, this.headerRowLeft || 0)}px`,
-            top: `${Math.max(0, y - halfOffset)}px`,
+            // đẩy line đỏ lên cao thêm một chút
+            top: `${Math.max(0, y - alignOffset)}px`,
             width: '100%',
             height: `${Math.max(0, height)}px`,
           }))
