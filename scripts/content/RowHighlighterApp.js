@@ -156,18 +156,17 @@ class RowHighlighterApp {
 
     headerRects.forEach((rect, index) => {
       const element = this.headerElementPool[index]
-      let { x, y, width, height } = rect
+      const { x, y } = rect
+      let { width, height } = rect
 
       // headerRects[0]: 列ヘッダー（A/B/C...）
       // headerRects[1]: 行ヘッダー（1/2/3...）
-      if (index === 0 && activeCellRect) {
-        // Dọc: chỉ cao bằng 1 dòng, không kéo xuống toàn bộ vùng freeze
-        height = Math.min(height, activeCellRect.height)
+      if (index === 0) {
+        // Cột: thu nhỏ nhẹ chiều cao để gọn hơn
+        height = height * 0.9
       } else if (index === 1) {
-        // Ngang: cố định bề rộng phủ quanh số hàng (ví dụ 6)
-        //  → không phụ thuộc độ rộng block freeze, tránh che quá nhiều cột
-        const headerPixelWidth = 40
-        width = Math.min(width, headerPixelWidth)
+        // Hàng: chỉ tăng rất nhẹ (~10%) bề rộng quanh số hàng
+        width = width * 1.1
       }
 
       Object.assign(element.style, {
@@ -175,7 +174,7 @@ class RowHighlighterApp {
         pointerEvents: 'none',
         display: 'block',
         backgroundColor: this.backgroundColor,
-        opacity: '0.1',
+        opacity: '0.4',
         left: `${x}px`,
         top: `${y}px`,
         width: `${width}px`,

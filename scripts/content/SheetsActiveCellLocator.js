@@ -229,31 +229,123 @@ class SheetsActiveCellLocator {
       return []
     }
 
-    const colHeaderRect = colHeaderContainer.getBoundingClientRect()
-    const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
-
     // アクティブセルのブラウザ座標
     const cellLeft = sheetRect.x + activeRect.x
+    const cellRight = cellLeft + activeRect.width
     const cellTop = sheetRect.y + activeRect.y
+    const cellBottom = cellTop + activeRect.height
+
+    /**
+     * ヘッダーコンテナ内から、アクティブセルに対応する
+     * ヘッダーセル（列/行）を幾何的に探す
+     * @param {HTMLElement} container
+     * @param {'x' | 'y'} axis
+     * @returns {DOMRect | null}
+     */
+    const findHeaderCellInContainer = (container, axis) => {
+      /** @type {{rect: DOMRect, score: number, distance: number} | null} */
+      let best = null
+
+      const elements = /** @type {NodeListOf<HTMLElement>} */ (
+        container.querySelectorAll('div, span')
+      )
+
+      elements.forEach((el) => {
+        const rect = el.getBoundingClientRect()
+        if (!rect || rect.width <= 0 || rect.height <= 0) {
+          return
+        }
+
+        if (axis === 'x') {
+          // 列ヘッダー: アクティブセルと X 方向で重なる要素の中から、
+          // シート本体のすぐ上にあるものを優先する
+          const overlapX =
+            Math.min(cellRight, rect.right) - Math.max(cellLeft, rect.left)
+          if (overlapX <= 0) return
+
+          const distance = Math.abs(rect.bottom - sheetRect.y)
+          const score = overlapX
+
+          if (
+            !best ||
+            score > best.score ||
+            (score === best.score && distance < best.distance)
+          ) {
+            best = { rect, score, distance }
+          }
+        } else {
+          // 行ヘッダー: アクティブセルと Y 方向で重なる要素の中から、
+          // シート本体のすぐ左にあるものを優先する
+          const overlapY =
+            Math.min(cellBottom, rect.bottom) - Math.max(cellTop, rect.top)
+          if (overlapY <= 0) return
+
+          const distance = Math.abs(rect.right - sheetRect.x)
+          const score = overlapY
+
+          if (
+            !best ||
+            score > best.score ||
+            (score === best.score && distance < best.distance)
+          ) {
+            best = { rect, score, distance }
+          }
+        }
+      })
+
+      return best ? best.rect : null
+    }
+
+    const colHeaderCellRect = findHeaderCellInContainer(
+      colHeaderContainer,
+      'x'
+    )
+    const rowHeaderCellRect = findHeaderCellInContainer(
+      rowHeaderContainer,
+      'y'
+    )
 
     /** @type {Array<HighlightRect>} */
     const result = []
 
-    // 列ヘッダー（例: T）
-    result.push({
-      x: cellLeft,
-      y: colHeaderRect.y,
-      width: activeRect.width,
-      height: colHeaderRect.height,
-    })
+    if (colHeaderCellRect) {
+      // 列ヘッダー（例: A/B/C/D...）- セル単位の Rect を使用
+      result.push({
+        x: colHeaderCellRect.x,
+        y: colHeaderCellRect.y,
+        width: colHeaderCellRect.width,
+        height: colHeaderCellRect.height,
+      })
+    } else {
+      // フォールバック: コンテナを使うが、高さは 1 行分程度に制限
+      const colHeaderRect = colHeaderContainer.getBoundingClientRect()
+      result.push({
+        x: cellLeft,
+        y: colHeaderRect.y,
+        width: activeRect.width,
+        height: Math.min(colHeaderRect.height, activeRect.height * 1.2),
+      })
+    }
 
-    // 行ヘッダー（例: 23）
-    result.push({
-      x: rowHeaderRect.x,
-      y: cellTop,
-      width: rowHeaderRect.width,
-      height: activeRect.height,
-    })
+    if (rowHeaderCellRect) {
+      // 行ヘッダー（例: 3/12...）- セル単位の Rect を使用
+      result.push({
+        x: rowHeaderCellRect.x,
+        y: rowHeaderCellRect.y,
+        width: rowHeaderCellRect.width,
+        height: rowHeaderCellRect.height,
+      })
+    } else {
+      // フォールバック: 左側のヘッダーバンドだけをカバーする幅に絞る
+      const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
+      const fallbackWidth = Math.min(rowHeaderRect.width, 40)
+      result.push({
+        x: rowHeaderRect.x,
+        y: cellTop,
+        width: fallbackWidth,
+        height: activeRect.height,
+      })
+    }
 
     return result
   }
