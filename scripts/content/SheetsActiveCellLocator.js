@@ -229,103 +229,43 @@ class SheetsActiveCellLocator {
       return []
     }
 
+    const colHeaderRect = colHeaderContainer.getBoundingClientRect()
+    const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
+
     // アクティブセルのブラウザ座標
     const cellLeft = sheetRect.x + activeRect.x
-    const cellRight = cellLeft + activeRect.width
     const cellTop = sheetRect.y + activeRect.y
-    const cellBottom = cellTop + activeRect.height
 
-    /**
-     * ヘッダーセル候補の中から、アクティブセルと
-     * 同じ列 / 行に対応するものを幾何的に探す
-     * @param {HTMLElement} container
-     * @param {'x' | 'y'} axis
-     * @returns {DOMRect | null}
-     */
-    const findHeaderCellRect = (container, axis) => {
-      /** @type {{rect: DOMRect, score: number, distance: number} | null} */
-      let best = null
+    // ヘッダーの高さは 1 行ぶんだけに制限する
+    const headerHeight = Math.max(
+      0,
+      Math.min(colHeaderRect.height, activeRect.height)
+    )
 
-      const elements = /** @type {NodeListOf<HTMLElement>} */ (
-        container.querySelectorAll('div, span')
-      )
-
-      elements.forEach((el) => {
-        const rect = el.getBoundingClientRect()
-
-        if (!rect || rect.width <= 0 || rect.height <= 0) {
-          return
-        }
-
-        if (axis === 'x') {
-          const overlapX =
-            Math.min(cellRight, rect.right) - Math.max(cellLeft, rect.left)
-          if (overlapX <= 0) return
-
-          // header cột nằm ngay phía trên vùng dữ liệu
-          const distance = Math.abs(rect.bottom - sheetRect.y)
-          const score = overlapX
-
-          if (
-            !best ||
-            score > best.score ||
-            (score === best.score && distance < best.distance)
-          ) {
-            best = { rect, score, distance }
-          }
-        } else {
-          const overlapY =
-            Math.min(cellBottom, rect.bottom) - Math.max(cellTop, rect.top)
-          if (overlapY <= 0) return
-
-          // header hàng nằm ngay bên trái vùng dữ liệu
-          const distance = Math.abs(rect.right - sheetRect.x)
-          const score = overlapY
-
-          if (
-            !best ||
-            score > best.score ||
-            (score === best.score && distance < best.distance)
-          ) {
-            best = { rect, score, distance }
-          }
-        }
-      })
-
-      return best ? best.rect : null
+    // 行ヘッダーの幅は「左のヘッダー帯」部分だけに制限する
+    let headerWidth = Math.max(0, sheetRect.x - rowHeaderRect.x)
+    if (!headerWidth || headerWidth > rowHeaderRect.width) {
+      headerWidth = Math.min(rowHeaderRect.width, activeRect.width)
     }
-
-    const colHeaderCellRect = findHeaderCellRect(colHeaderContainer, 'x')
-    const rowHeaderCellRect = findHeaderCellRect(rowHeaderContainer, 'y')
 
     /** @type {Array<HighlightRect>} */
     const result = []
 
-    if (colHeaderCellRect) {
-      // 列ヘッダー（例: T）- ヘッダーセルそのものの Rect を使用
-      result.push({
-        x: colHeaderCellRect.x - sheetRect.x,
-        y: colHeaderCellRect.y - sheetRect.y,
-        width: colHeaderCellRect.width,
-        height: colHeaderCellRect.height,
-      })
-    }
+    // 列ヘッダー（例: F / AR / AU）
+    result.push({
+      x: cellLeft,
+      y: colHeaderRect.y,
+      width: activeRect.width,
+      height: headerHeight,
+    })
 
-    if (rowHeaderCellRect) {
-      // 行ヘッダー（例: 23）- ヘッダーセルそのものの Rect を使用
-      result.push({
-        x: rowHeaderCellRect.x - sheetRect.x,
-        y: rowHeaderCellRect.y - sheetRect.y,
-        width: rowHeaderCellRect.width,
-        height: rowHeaderCellRect.height,
-      })
-    }
-
-    // Fallback: 万が一どちらのヘッダーセルも見つからなかった場合は、
-    // ヘッダーのハイライトを描画しない
-    if (result.length === 0) {
-      return []
-    }
+    // 行ヘッダー（例: 3）
+    result.push({
+      x: rowHeaderRect.x,
+      y: cellTop,
+      width: headerWidth,
+      height: activeRect.height,
+    })
 
     return result
   }
