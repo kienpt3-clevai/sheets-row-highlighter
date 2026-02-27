@@ -89,7 +89,7 @@ window.addEventListener('load', () => {
 
     chrome.storage.local.get(['sheetSettings'], (items) => {
       const allSettings = items.sheetSettings || {}
-      allSettings[sheetKey] = {
+      const settings = {
         color,
         opacity,
         row,
@@ -101,9 +101,13 @@ window.addEventListener('load', () => {
         headerRowRight,
         updatedAt: Date.now(),
       }
+      allSettings[sheetKey] = settings
 
       chrome.storage.local.set({ sheetSettings: allSettings }, () => {
-        sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
+        // Gửi kèm settings mới để content script có thể cập nhật ngay lập tức
+        sendMessageToActiveTab({ type: 'settingsUpdated', settings, sheetKey }).catch(
+          () => {}
+        )
       })
     })
   }
