@@ -43,7 +43,7 @@ window.addEventListener('load', () => {
   })
 
   // 設定保存
-  const save = () => {
+  const save = async () => {
     const color = hueb.color
     const opacity = Math.min(
       Math.max(parseFloat(opacityInput.value, 10) || 1, 0.1),
@@ -64,12 +64,34 @@ window.addEventListener('load', () => {
       4
     )
 
-    chrome.storage.local.set(
-      { color, opacity, row, column, lineSize, headerColScale, headerRowScale },
-      () => {
-        sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
+    // Hỏi content script để lấy sheetKey hiện tại
+    let sheetKey = 'default'
+    try {
+      const response = await sendMessageToActiveTab({ type: 'getSheetKey' })
+      if (response && typeof response.sheetKey === 'string') {
+        sheetKey = response.sheetKey
       }
-    )
+    } catch {
+      // ignore, dùng key mặc định
+    }
+
+    chrome.storage.local.get(['sheetSettings'], (items) => {
+      const allSettings = items.sheetSettings || {}
+      allSettings[sheetKey] = {
+        color,
+        opacity,
+        row,
+        column,
+        lineSize,
+        headerColScale,
+        headerRowScale,
+        updatedAt: Date.now(),
+      }
+
+      chrome.storage.local.set({ sheetSettings: allSettings }, () => {
+        sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
+      })
+    })
   }
 
   // 設定リセット
@@ -84,21 +106,8 @@ window.addEventListener('load', () => {
     headerColScaleInput.value = defaultHeaderColScale
     headerRowScaleInput.value = defaultHeaderRowScale
 
-    chrome.storage.local.set(
-      {
-        color: defaultColor,
-        opacity: defaultOpacity,
-        row: defaultRow,
-        column: defaultColumn,
-        lineSize: defaultLineSize,
-        headerColScale: defaultHeaderColScale,
-        headerRowScale: defaultHeaderRowScale,
-      },
-      () => {
-        sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
-      }
-    )
-
+    // Lưu lại mặc định cho sheet hiện tại
+    void save()
     hueb.on('change', save)
   })
 
@@ -115,26 +124,39 @@ window.addEventListener('load', () => {
   document.getElementById('nextColor').addEventListener('click', () => cycleColor(1))
 
   // 設定読み込み
-  chrome.storage.local.get(
-    ['color', 'opacity', 'row', 'column', 'lineSize', 'headerColScale', 'headerRowScale'],
-    (items) => {
-      hueb.setColor(items.color ?? defaultColor)
-      opacityInput.value = items.opacity ?? defaultOpacity
-      rowInput.checked = items.row ?? defaultRow
-      columnInput.checked = items.column ?? defaultColumn
-      lineSizeInput.value = items.lineSize ?? defaultLineSize
-      headerColScaleInput.value = items.headerColScale ?? defaultHeaderColScale
-      headerRowScaleInput.value = items.headerRowScale ?? defaultHeaderRowScale
+  // 初期表示時: lấy config cho sheet hiện tại
+  ;(async () => {
+    let sheetKey = 'default'
+    try {
+      const response = await sendMessageToActiveTab({ type: 'getSheetKey' })
+      if (response && typeof response.sheetKey === 'string') {
+        sheetKey = response.sheetKey
+      }
+    } catch {
+      // ignore
+    }
+
+    chrome.storage.local.get(['sheetSettings'], (items) => {
+      const allSettings = items.sheetSettings || {}
+      const current = allSettings[sheetKey] || {}
+
+      hueb.setColor(current.color ?? defaultColor)
+      opacityInput.value = current.opacity ?? defaultOpacity
+      rowInput.checked = current.row ?? defaultRow
+      columnInput.checked = current.column ?? defaultColumn
+      lineSizeInput.value = current.lineSize ?? defaultLineSize
+      headerColScaleInput.value = current.headerColScale ?? defaultHeaderColScale
+      headerRowScaleInput.value = current.headerRowScale ?? defaultHeaderRowScale
 
       hueb.on('change', save)
-      opacityInput.addEventListener('change', save)
-      rowInput.addEventListener('change', save)
-      columnInput.addEventListener('change', save)
-      lineSizeInput.addEventListener('change', save)
-      headerColScaleInput.addEventListener('change', save)
-      headerRowScaleInput.addEventListener('change', save)
-    }
-  )
+      opacityInput.addEventListener('change', () => void save())
+      rowInput.addEventListener('change', () => void save())
+      columnInput.addEventListener('change', () => void save())
+      lineSizeInput.addEventListener('change', () => void save())
+      headerColScaleInput.addEventListener('change', () => void save())
+      headerRowScaleInput.addEventListener('change', () => void save())
+    })
+  })()
 
   // ショートカット入力のメッセージを受け取ったとき
   chrome.runtime.onMessage.addListener((request) => {
