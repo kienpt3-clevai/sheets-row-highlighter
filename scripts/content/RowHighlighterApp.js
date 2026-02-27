@@ -59,19 +59,19 @@ class RowHighlighterApp {
       this.isRowEnabled
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
             isRow: true,
-            // Cắt phần line đỏ bên trái theo R.left
-            left: `${Math.max(0, (this.headerRowLeft || 0) + 0)}px`,
-            top: `${Math.max(0, y - halfOffset)}px`,
+            // Cắt line đỏ ngang theo R.left, không vượt qua phần header
+            left: `${Math.max(0, this.headerRowLeft || 0)}px`,
+            top: `${Math.max(0, y)}px`,
             width: '100%',
-            height: `${Math.max(0, height - alignOffset)}px`,
+            height: `${Math.max(0, height)}px`,
           }))
         : []
     ).concat(
       this.isColEnabled
         ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
             isRow: false,
+            // Cột: cắt line đỏ dọc phía trên theo C.top
             left: `${Math.max(0, x - halfOffset)}px`,
-            // Cắt phần line đỏ phía trên theo C.top
             top: `${Math.max(0, this.headerColTop || 0)}px`,
             width: `${Math.max(0, width - alignOffset)}px`,
             height: '100%',
