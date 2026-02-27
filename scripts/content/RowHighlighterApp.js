@@ -26,6 +26,8 @@ class RowHighlighterApp {
     this.lineSize = 2
     this.isRowEnabled = true
     this.isColEnabled = false
+    this.headerColScale = 0.9
+    this.headerRowScale = 1.15
   }
 
   update() {
@@ -169,11 +171,9 @@ class RowHighlighterApp {
       // headerRects[0]: 列ヘッダー（A/B/C...）
       // headerRects[1]: 行ヘッダー（1/2/3...）
       if (index === 0) {
-        // Cột: thu nhỏ nhẹ chiều cao để gọn hơn
-        height = height * 0.9
+        height = height * this.headerColScale
       } else if (index === 1) {
-        // Hàng: tăng thêm một chút nữa (~15%) bề rộng quanh số hàng
-        width = width * 1.15
+        width = width * this.headerRowScale
       }
 
       Object.assign(element.style, {

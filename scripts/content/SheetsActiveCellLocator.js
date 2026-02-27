@@ -308,8 +308,25 @@ class SheetsActiveCellLocator {
     // 列ヘッダー（例: A/B/C/D...）
     // freeze 有無や行の高さに関わらず、視覚的な「1 dòng header」分だけを塗る
     const colHeaderRect = colHeaderContainer.getBoundingClientRect()
-    const zoomScale = this._getZoomScale?.() || 1
-    const baseHeaderHeight = 26 * zoomScale // px, scale theo zoom của Google Sheets
+
+    // Thử đọc zoom từ toolbar; nếu không được, fallback theo tỉ lệ chiều cao container
+    const zoomFromToolbar = typeof this._getZoomScale === 'function' ? this._getZoomScale() : 0
+
+    // Ghi lại chiều cao container ở lần đầu để làm mốc 100%
+    if (!this._baseHeaderContainerHeight) {
+      this._baseHeaderContainerHeight = colHeaderRect.height
+    }
+    const heightScale =
+      this._baseHeaderContainerHeight > 0
+        ? colHeaderRect.height / this._baseHeaderContainerHeight
+        : 1
+
+    const zoomScale =
+      zoomFromToolbar && Number.isFinite(zoomFromToolbar) && zoomFromToolbar > 0
+        ? zoomFromToolbar
+        : heightScale
+
+    const baseHeaderHeight = 26 * zoomScale // px, scale theo zoom thực tế
     const colBandInset = 0 // dịch sát về bên trái hơn một chút
     const colBandWidth = Math.max(0, activeRect.width - colBandInset * 2)
     result.push({

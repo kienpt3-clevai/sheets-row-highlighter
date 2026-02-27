@@ -12,6 +12,8 @@ window.addEventListener('load', () => {
   const rowInput = document.getElementById('row')
   const columnInput = document.getElementById('column')
   const lineSizeInput = document.getElementById('lineSize')
+  const headerColScaleInput = document.getElementById('headerColScale')
+  const headerRowScaleInput = document.getElementById('headerRowScale')
   const resetButton = document.getElementById('reset')
 
   const defaultColor = '#c2185b'
@@ -19,6 +21,8 @@ window.addEventListener('load', () => {
   const defaultRow = true
   const defaultColumn = true
   const defaultLineSize = 1.75
+  const defaultHeaderColScale = 0.9
+  const defaultHeaderRowScale = 1.15
 
   const customColors = [
     '#0e65eb',
@@ -51,9 +55,17 @@ window.addEventListener('load', () => {
       Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
       5
     )
+    const headerColScale = Math.min(
+      Math.max(parseFloat(headerColScaleInput.value, 10) || defaultHeaderColScale, 0.5),
+      2
+    )
+    const headerRowScale = Math.min(
+      Math.max(parseFloat(headerRowScaleInput.value, 10) || defaultHeaderRowScale, 0.5),
+      2
+    )
 
     chrome.storage.local.set(
-      { color, opacity, row, column, lineSize },
+      { color, opacity, row, column, lineSize, headerColScale, headerRowScale },
       () => {
         sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
       }
@@ -69,6 +81,8 @@ window.addEventListener('load', () => {
     rowInput.checked = defaultRow
     columnInput.checked = defaultColumn
     lineSizeInput.value = defaultLineSize
+    headerColScaleInput.value = defaultHeaderColScale
+    headerRowScaleInput.value = defaultHeaderRowScale
 
     chrome.storage.local.set(
       {
@@ -77,6 +91,8 @@ window.addEventListener('load', () => {
         row: defaultRow,
         column: defaultColumn,
         lineSize: defaultLineSize,
+        headerColScale: defaultHeaderColScale,
+        headerRowScale: defaultHeaderRowScale,
       },
       () => {
         sendMessageToActiveTab({ type: 'settingsUpdated' }).catch(() => {})
@@ -100,19 +116,23 @@ window.addEventListener('load', () => {
 
   // 設定読み込み
   chrome.storage.local.get(
-    ['color', 'opacity', 'row', 'column', 'lineSize'],
+    ['color', 'opacity', 'row', 'column', 'lineSize', 'headerColScale', 'headerRowScale'],
     (items) => {
       hueb.setColor(items.color ?? defaultColor)
       opacityInput.value = items.opacity ?? defaultOpacity
       rowInput.checked = items.row ?? defaultRow
       columnInput.checked = items.column ?? defaultColumn
       lineSizeInput.value = items.lineSize ?? defaultLineSize
+      headerColScaleInput.value = items.headerColScale ?? defaultHeaderColScale
+      headerRowScaleInput.value = items.headerRowScale ?? defaultHeaderRowScale
 
       hueb.on('change', save)
       opacityInput.addEventListener('change', save)
       rowInput.addEventListener('change', save)
       columnInput.addEventListener('change', save)
       lineSizeInput.addEventListener('change', save)
+      headerColScaleInput.addEventListener('change', save)
+      headerRowScaleInput.addEventListener('change', save)
     }
   )
 

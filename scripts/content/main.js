@@ -27,13 +27,15 @@ const storage = chrome.storage
 
 const loadSettings = () => {
   storage.local.get(
-    ['color', 'opacity', 'row', 'column', 'lineSize'],
+    ['color', 'opacity', 'row', 'column', 'lineSize', 'headerColScale', 'headerRowScale'],
     (/** @type {any} */ items) => {
       app.backgroundColor = items.color ?? app.backgroundColor
       app.opacity = items.opacity ?? app.opacity
       app.isRowEnabled = items.row ?? app.isRowEnabled
       app.isColEnabled = items.column ?? app.isColEnabled
       app.lineSize = items.lineSize ?? app.lineSize
+      app.headerColScale = items.headerColScale ?? app.headerColScale
+      app.headerRowScale = items.headerRowScale ?? app.headerRowScale
       updateHighlight()
     }
   )
