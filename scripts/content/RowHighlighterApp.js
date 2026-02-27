@@ -26,6 +26,7 @@ class RowHighlighterApp {
     this.lineSize = 2
     this.isRowEnabled = true
     this.isColEnabled = false
+    this.headerColTop = 0
     this.headerColScale = 0.9
     this.headerRowScale = 1.15
   }
@@ -165,14 +166,18 @@ class RowHighlighterApp {
 
     headerRects.forEach((rect, index) => {
       const element = this.headerElementPool[index]
-      const { x, y } = rect
-      let { width, height } = rect
+      let { x, y, width, height } = rect
 
       // headerRects[0]: 列ヘッダー（A/B/C...）
       // headerRects[1]: 行ヘッダー（1/2/3...）
       if (index === 0) {
-        height = height * this.headerColScale
+        // Điều chỉnh cạnh trên & cạnh dưới theo C.top / C.bot
+        const topOffset = this.headerColTop || 0
+        const scaledHeight = height * this.headerColScale
+        y += topOffset
+        height = Math.max(0, scaledHeight - topOffset)
       } else if (index === 1) {
+        // Điều chỉnh bề rộng theo R.HD
         width = width * this.headerRowScale
       }
 

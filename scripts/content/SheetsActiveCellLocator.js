@@ -331,7 +331,9 @@ class SheetsActiveCellLocator {
     const colBandWidth = Math.max(0, activeRect.width - colBandInset * 2)
     result.push({
       x: cellLeft + colBandInset,
-      y: colHeaderRect.y,
+      // Bắt đầu ngay từ mép trên vùng dữ liệu (chữ cột AH),
+      // không ăn vào hàng dấu "+" phía trên.
+      y: sheetRect.y,
       width: colBandWidth,
       height: Math.min(colHeaderRect.height, baseHeaderHeight),
     })

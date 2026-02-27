@@ -12,6 +12,7 @@ window.addEventListener('load', () => {
   const rowInput = document.getElementById('row')
   const columnInput = document.getElementById('column')
   const lineSizeInput = document.getElementById('lineSize')
+  const headerColTopInput = document.getElementById('headerColTop')
   const headerColScaleInput = document.getElementById('headerColScale')
   const headerRowScaleInput = document.getElementById('headerRowScale')
   const resetButton = document.getElementById('reset')
@@ -21,6 +22,7 @@ window.addEventListener('load', () => {
   const defaultRow = true
   const defaultColumn = true
   const defaultLineSize = 1.75
+  const defaultHeaderColTop = 0
   const defaultHeaderColScale = 0.9
   const defaultHeaderRowScale = 1.15
 
@@ -55,6 +57,10 @@ window.addEventListener('load', () => {
       Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
       5
     )
+    const headerColTop = Math.min(
+      Math.max(parseFloat(headerColTopInput.value, 10) || defaultHeaderColTop, -20),
+      20
+    )
     const headerColScale = Math.min(
       Math.max(parseFloat(headerColScaleInput.value, 10) || defaultHeaderColScale, 0.5),
       4
@@ -83,6 +89,7 @@ window.addEventListener('load', () => {
         row,
         column,
         lineSize,
+        headerColTop,
         headerColScale,
         headerRowScale,
         updatedAt: Date.now(),
@@ -103,6 +110,7 @@ window.addEventListener('load', () => {
     rowInput.checked = defaultRow
     columnInput.checked = defaultColumn
     lineSizeInput.value = defaultLineSize
+    headerColTopInput.value = defaultHeaderColTop
     headerColScaleInput.value = defaultHeaderColScale
     headerRowScaleInput.value = defaultHeaderRowScale
 
@@ -145,6 +153,7 @@ window.addEventListener('load', () => {
       rowInput.checked = current.row ?? defaultRow
       columnInput.checked = current.column ?? defaultColumn
       lineSizeInput.value = current.lineSize ?? defaultLineSize
+      headerColTopInput.value = current.headerColTop ?? defaultHeaderColTop
       headerColScaleInput.value = current.headerColScale ?? defaultHeaderColScale
       headerRowScaleInput.value = current.headerRowScale ?? defaultHeaderRowScale
 
@@ -153,6 +162,7 @@ window.addEventListener('load', () => {
       rowInput.addEventListener('change', () => void save())
       columnInput.addEventListener('change', () => void save())
       lineSizeInput.addEventListener('change', () => void save())
+      headerColTopInput.addEventListener('change', () => void save())
       headerColScaleInput.addEventListener('change', () => void save())
       headerRowScaleInput.addEventListener('change', () => void save())
     })
