@@ -164,9 +164,10 @@ class RowHighlighterApp {
         // Dọc: chỉ cao bằng 1 dòng, không kéo xuống toàn bộ vùng freeze
         height = Math.min(height, activeCellRect.height)
       } else if (index === 1) {
-        // Ngang: chỉ lấy ~45% bề rộng block header+freeze,
-        // nhằm chủ yếu phủ dải số dòng bên trái, chấp nhận che nhẹ mép cột freeze
-        width = Math.max(0, Math.min(width, width * 0.45))
+        // Ngang: cố định bề rộng phủ quanh số hàng (ví dụ 6)
+        //  → không phụ thuộc độ rộng block freeze, tránh che quá nhiều cột
+        const headerPixelWidth = 40
+        width = Math.min(width, headerPixelWidth)
       }
 
       Object.assign(element.style, {
