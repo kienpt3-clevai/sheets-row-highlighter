@@ -300,52 +300,40 @@ class SheetsActiveCellLocator {
       colHeaderContainer,
       'x'
     )
-    const rowHeaderCellRect = findHeaderCellInContainer(
-      rowHeaderContainer,
-      'y'
-    )
+    const rowHeaderCellRect = findHeaderCellInContainer(rowHeaderContainer, 'y')
 
     /** @type {Array<HighlightRect>} */
     const result = []
 
-    if (colHeaderCellRect) {
-      // 列ヘッダー（例: A/B/C/D...）- セル単位の Rect を使用
-      result.push({
-        x: colHeaderCellRect.x,
-        y: colHeaderCellRect.y,
-        width: colHeaderCellRect.width,
-        height: colHeaderCellRect.height,
-      })
-    } else {
-      // フォールバック: コンテナを使うが、高さは 1 行分程度に制限
-      const colHeaderRect = colHeaderContainer.getBoundingClientRect()
-      result.push({
-        x: cellLeft,
-        y: colHeaderRect.y,
-        width: activeRect.width,
-        height: Math.min(colHeaderRect.height, activeRect.height * 1.2),
-      })
-    }
+    // 列ヘッダー（例: A/B/C/D...）
+    // freeze 有無や行の高さに関わらず、視覚的な「1 dòng header」分だけを塗る
+    const colHeaderRect = colHeaderContainer.getBoundingClientRect()
+    const zoomScale = this._getZoomScale?.() || 1
+    const baseHeaderHeight = 26 * zoomScale // px, scale theo zoom của Google Sheets
+    const colBandInset = 0 // dịch sát về bên trái hơn một chút
+    const colBandWidth = Math.max(0, activeRect.width - colBandInset * 2)
+    result.push({
+      x: cellLeft + colBandInset,
+      y: colHeaderRect.y,
+      width: colBandWidth,
+      height: Math.min(colHeaderRect.height, baseHeaderHeight),
+    })
 
-    if (rowHeaderCellRect) {
-      // 行ヘッダー（例: 3/12...）- セル単位の Rect を使用
-      result.push({
-        x: rowHeaderCellRect.x,
-        y: rowHeaderCellRect.y,
-        width: rowHeaderCellRect.width,
-        height: rowHeaderCellRect.height,
-      })
-    } else {
-      // フォールバック: 左側のヘッダーバンドだけをカバーする幅に絞る
-      const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
-      const fallbackWidth = Math.min(rowHeaderRect.width, 40)
-      result.push({
-        x: rowHeaderRect.x,
-        y: cellTop,
-        width: fallbackWidth,
-        height: activeRect.height,
-      })
-    }
+    // 行ヘッダー（例: 2/3/12...）
+    const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
+    const bandWidth = Math.min(rowHeaderRect.width, 40)
+    const rowX = rowHeaderRect.x
+    const rowY = rowHeaderCellRect ? rowHeaderCellRect.y : cellTop
+    const rowHeight = rowHeaderCellRect
+      ? rowHeaderCellRect.height
+      : activeRect.height
+
+    result.push({
+      x: rowX,
+      y: rowY,
+      width: bandWidth,
+      height: rowHeight,
+    })
 
     return result
   }
@@ -353,5 +341,41 @@ class SheetsActiveCellLocator {
   getSheetKey() {
     const { pathname } = location
     return pathname.match(/d\/([^/]*)/)?.[1] || pathname
+  }
+
+  /**
+   * Google Sheets のツールバーからズーム倍率を推定する
+   * 例: "75%" / "100%" / "150%"
+   * @returns {number} ズーム倍率 (1.0 = 100%)
+   */
+  _getZoomScale() {
+    try {
+      /** @type {HTMLElement | null} */
+      const zoomButton =
+        document.querySelector('[aria-label="Zoom"]') ||
+        document.querySelector('[aria-label="Thu phóng"]') ||
+        document.querySelector('[aria-label="Phóng to thu nhỏ"]')
+
+      if (!zoomButton) return 1
+
+      const text =
+        zoomButton.textContent ||
+        /** @type {HTMLElement | null} */ (
+          zoomButton.querySelector('.goog-flat-menu-button-caption')
+        )?.textContent ||
+        ''
+
+      const match = text.match(/(\d+)\s*%/)
+      if (!match) return 1
+
+      const value = Number(match[1])
+      if (!Number.isFinite(value) || value <= 0) return 1
+
+      // Giới hạn trong khoảng hợp lý 25% - 400%
+      const clamped = Math.max(25, Math.min(400, value))
+      return clamped / 100
+    } catch {
+      return 1
+    }
   }
 }

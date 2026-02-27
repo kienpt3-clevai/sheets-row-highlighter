@@ -73,6 +73,12 @@ class RowHighlighterApp {
         : []
     )
 
+    // Khi chọn cả hàng hoặc cả cột (Shift+Space / Ctrl+Space),
+    // getHighlightRectList() trả về [] nhưng vẫn có activeCellRect.
+    // Trong trường hợp này ta không vẽ header highlight (opa 0.4).
+    const isFullRowOrColumnSelection =
+      Array.isArray(rectList) && rectList.length === 0 && !!activeCellRect
+
     const diff = highlightTaskList.length - this.elementPool.length
 
     if (0 < diff) {
@@ -124,6 +130,7 @@ class RowHighlighterApp {
     // =======================
     /** @type {Array<HighlightRect>} */
     const headerRects =
+      !isFullRowOrColumnSelection &&
       typeof this.locator.getHeaderHighlightRectList === 'function'
         ? this.locator.getHeaderHighlightRectList()
         : []
