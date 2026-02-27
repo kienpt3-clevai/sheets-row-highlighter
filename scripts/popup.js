@@ -23,10 +23,10 @@ window.addEventListener('load', () => {
   const defaultRow = true
   const defaultColumn = true
   const defaultLineSize = 1.75
-  const defaultHeaderColTop = 0
-  const defaultHeaderColScale = 0
-  const defaultHeaderRowLeft = 0
-  const defaultHeaderRowRight = 0
+  const defaultHeaderColTop = 50
+  const defaultHeaderColScale = -49
+  const defaultHeaderRowLeft = 49
+  const defaultHeaderRowRight = -56
 
   const customColors = [
     '#0e65eb',

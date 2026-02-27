@@ -26,10 +26,10 @@ class RowHighlighterApp {
     this.lineSize = 2
     this.isRowEnabled = true
     this.isColEnabled = false
-    this.headerColTop = 0
-    this.headerColScale = 0
-    this.headerRowLeft = 0
-    this.headerRowRight = 1.15
+    this.headerColTop = 50
+    this.headerColScale = -49
+    this.headerRowLeft = 49
+    this.headerRowRight = -56
   }
 
   update() {
