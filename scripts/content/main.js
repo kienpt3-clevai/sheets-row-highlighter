@@ -62,7 +62,8 @@ const loadSettings = () => {
     app.lineSize = current.lineSize ?? app.lineSize
     app.headerColTop = current.headerColTop ?? app.headerColTop
     app.headerColScale = current.headerColScale ?? app.headerColScale
-    app.headerRowScale = current.headerRowScale ?? app.headerRowScale
+    app.headerRowLeft = current.headerRowLeft ?? app.headerRowLeft
+    app.headerRowRight = current.headerRowRight ?? app.headerRowRight
 
     updateHighlight()
   })

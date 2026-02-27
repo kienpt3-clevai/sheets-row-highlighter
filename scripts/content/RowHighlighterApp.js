@@ -28,7 +28,8 @@ class RowHighlighterApp {
     this.isColEnabled = false
     this.headerColTop = 0
     this.headerColScale = 0.9
-    this.headerRowScale = 1.15
+    this.headerRowLeft = 0
+    this.headerRowRight = 1.15
   }
 
   update() {
@@ -177,8 +178,11 @@ class RowHighlighterApp {
         y += topOffset
         height = Math.max(0, scaledHeight - topOffset)
       } else if (index === 1) {
-        // Điều chỉnh bề rộng theo R.HD
-        width = width * this.headerRowScale
+        // Điều chỉnh bề rộng theo R.left / R.right
+        const leftOffset = this.headerRowLeft || 0
+        const scaledWidth = width * this.headerRowRight
+        x += leftOffset
+        width = Math.max(0, scaledWidth - leftOffset)
       }
 
       Object.assign(element.style, {

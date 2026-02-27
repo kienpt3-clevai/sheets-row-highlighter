@@ -14,7 +14,8 @@ window.addEventListener('load', () => {
   const lineSizeInput = document.getElementById('lineSize')
   const headerColTopInput = document.getElementById('headerColTop')
   const headerColScaleInput = document.getElementById('headerColScale')
-  const headerRowScaleInput = document.getElementById('headerRowScale')
+  const headerRowLeftInput = document.getElementById('headerRowLeft')
+  const headerRowRightInput = document.getElementById('headerRowRight')
   const resetButton = document.getElementById('reset')
 
   const defaultColor = '#c2185b'
@@ -24,7 +25,8 @@ window.addEventListener('load', () => {
   const defaultLineSize = 1.75
   const defaultHeaderColTop = 0
   const defaultHeaderColScale = 0.9
-  const defaultHeaderRowScale = 1.15
+  const defaultHeaderRowLeft = 0
+  const defaultHeaderRowRight = 1.15
 
   const customColors = [
     '#0e65eb',
@@ -58,15 +60,19 @@ window.addEventListener('load', () => {
       5
     )
     const headerColTop = Math.min(
-      Math.max(parseFloat(headerColTopInput.value, 10) || defaultHeaderColTop, -20),
-      20
+      Math.max(parseFloat(headerColTopInput.value, 10) || defaultHeaderColTop, -60),
+      60
     )
     const headerColScale = Math.min(
       Math.max(parseFloat(headerColScaleInput.value, 10) || defaultHeaderColScale, 0.5),
       4
     )
-    const headerRowScale = Math.min(
-      Math.max(parseFloat(headerRowScaleInput.value, 10) || defaultHeaderRowScale, 0.5),
+    const headerRowLeft = Math.min(
+      Math.max(parseFloat(headerRowLeftInput.value, 10) || defaultHeaderRowLeft, -60),
+      60
+    )
+    const headerRowRight = Math.min(
+      Math.max(parseFloat(headerRowRightInput.value, 10) || defaultHeaderRowRight, 0.5),
       4
     )
 
@@ -91,7 +97,8 @@ window.addEventListener('load', () => {
         lineSize,
         headerColTop,
         headerColScale,
-        headerRowScale,
+        headerRowLeft,
+        headerRowRight,
         updatedAt: Date.now(),
       }
 
@@ -112,7 +119,8 @@ window.addEventListener('load', () => {
     lineSizeInput.value = defaultLineSize
     headerColTopInput.value = defaultHeaderColTop
     headerColScaleInput.value = defaultHeaderColScale
-    headerRowScaleInput.value = defaultHeaderRowScale
+    headerRowLeftInput.value = defaultHeaderRowLeft
+    headerRowRightInput.value = defaultHeaderRowRight
 
     // Lưu lại mặc định cho sheet hiện tại
     void save()
@@ -155,7 +163,8 @@ window.addEventListener('load', () => {
       lineSizeInput.value = current.lineSize ?? defaultLineSize
       headerColTopInput.value = current.headerColTop ?? defaultHeaderColTop
       headerColScaleInput.value = current.headerColScale ?? defaultHeaderColScale
-      headerRowScaleInput.value = current.headerRowScale ?? defaultHeaderRowScale
+      headerRowLeftInput.value = current.headerRowLeft ?? defaultHeaderRowLeft
+      headerRowRightInput.value = current.headerRowRight ?? defaultHeaderRowRight
 
       hueb.on('change', save)
       opacityInput.addEventListener('change', () => void save())
@@ -164,7 +173,8 @@ window.addEventListener('load', () => {
       lineSizeInput.addEventListener('change', () => void save())
       headerColTopInput.addEventListener('change', () => void save())
       headerColScaleInput.addEventListener('change', () => void save())
-      headerRowScaleInput.addEventListener('change', () => void save())
+      headerRowLeftInput.addEventListener('change', () => void save())
+      headerRowRightInput.addEventListener('change', () => void save())
     })
   })()
 
