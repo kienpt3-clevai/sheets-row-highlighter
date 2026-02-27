@@ -242,11 +242,10 @@ class SheetsActiveCellLocator {
       Math.min(colHeaderRect.height, activeRect.height)
     )
 
-    // 行ヘッダーの幅は「左のヘッダー帯」部分だけに制限する
-    let headerWidth = Math.max(0, sheetRect.x - rowHeaderRect.x)
-    if (!headerWidth || headerWidth > rowHeaderRect.width) {
-      headerWidth = Math.min(rowHeaderRect.width, activeRect.width)
-    }
+    // 行ヘッダーの幅は左端のヘッダー帯の中だけにする。
+    // Google Sheets ではこの帯の幅はおおよそ一定なので、
+    // 固定値（最大 32px）をとり、必ず rowHeaderRect 内に収める。
+    const headerWidth = Math.min(rowHeaderRect.width, 32)
 
     /** @type {Array<HighlightRect>} */
     const result = []
