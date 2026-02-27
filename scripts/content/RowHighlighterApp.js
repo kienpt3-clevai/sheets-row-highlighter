@@ -27,7 +27,7 @@ class RowHighlighterApp {
     this.isRowEnabled = true
     this.isColEnabled = false
     this.headerColTop = 0
-    this.headerColScale = 0.9
+    this.headerColScale = 0
     this.headerRowLeft = 0
     this.headerRowRight = 1.15
   }
@@ -172,17 +172,17 @@ class RowHighlighterApp {
       // headerRects[0]: 列ヘッダー（A/B/C...）
       // headerRects[1]: 行ヘッダー（1/2/3...）
       if (index === 0) {
-        // Điều chỉnh cạnh trên & cạnh dưới theo C.top / C.bot
+        // Điều chỉnh cạnh trên & cạnh dưới theo C.top / C.bot (px)
         const topOffset = this.headerColTop || 0
-        const scaledHeight = height * this.headerColScale
+        const bottomOffset = this.headerColScale || 0
         y += topOffset
-        height = Math.max(0, scaledHeight - topOffset)
+        height = Math.max(0, height - topOffset - bottomOffset)
       } else if (index === 1) {
-        // Điều chỉnh bề rộng theo R.left / R.right
+        // Điều chỉnh bề rộng theo R.left / R.right (px)
         const leftOffset = this.headerRowLeft || 0
-        const scaledWidth = width * this.headerRowRight
+        const rightOffset = this.headerRowRight || 0
         x += leftOffset
-        width = Math.max(0, scaledWidth - leftOffset)
+        width = Math.max(0, width - leftOffset - rightOffset)
       }
 
       Object.assign(element.style, {

@@ -24,9 +24,9 @@ window.addEventListener('load', () => {
   const defaultColumn = true
   const defaultLineSize = 1.75
   const defaultHeaderColTop = 0
-  const defaultHeaderColScale = 0.9
+  const defaultHeaderColScale = 0
   const defaultHeaderRowLeft = 0
-  const defaultHeaderRowRight = 1.15
+  const defaultHeaderRowRight = 0
 
   const customColors = [
     '#0e65eb',
@@ -64,16 +64,16 @@ window.addEventListener('load', () => {
       60
     )
     const headerColScale = Math.min(
-      Math.max(parseFloat(headerColScaleInput.value, 10) || defaultHeaderColScale, 0.5),
-      4
+      Math.max(parseFloat(headerColScaleInput.value, 10) || defaultHeaderColScale, -60),
+      60
     )
     const headerRowLeft = Math.min(
       Math.max(parseFloat(headerRowLeftInput.value, 10) || defaultHeaderRowLeft, -60),
       60
     )
     const headerRowRight = Math.min(
-      Math.max(parseFloat(headerRowRightInput.value, 10) || defaultHeaderRowRight, 0.5),
-      4
+      Math.max(parseFloat(headerRowRightInput.value, 10) || defaultHeaderRowRight, -60),
+      60
     )
 
     // Hỏi content script để lấy sheetKey hiện tại
