@@ -232,6 +232,11 @@ class SheetsActiveCellLocator {
     const colHeaderRect = colHeaderContainer.getBoundingClientRect()
     const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
 
+    // Khu vực header thuần được giả định là phần
+    // nằm giữa container header và vùng dữ liệu (sheetRect).
+    const headerHeight = Math.max(0, sheetRect.y - colHeaderRect.y)
+    const headerWidth = Math.max(0, sheetRect.x - rowHeaderRect.x)
+
     // アクティブセルのブラウザ座標
     const cellLeft = sheetRect.x + activeRect.x
     const cellTop = sheetRect.y + activeRect.y
@@ -244,14 +249,16 @@ class SheetsActiveCellLocator {
       x: cellLeft,
       y: colHeaderRect.y,
       width: activeRect.width,
-      height: colHeaderRect.height,
+      // Chỉ phủ phần header cột (chữ cột), không bao gồm các hàng freeze bên dưới
+      height: headerHeight || colHeaderRect.height,
     })
 
     // 行ヘッダー（例: 23）
     result.push({
       x: rowHeaderRect.x,
       y: cellTop,
-      width: rowHeaderRect.width,
+      // Chỉ phủ phần header hàng (số dòng), không bao gồm vùng cột/ô freeze
+      width: headerWidth || rowHeaderRect.width,
       height: activeRect.height,
     })
 
