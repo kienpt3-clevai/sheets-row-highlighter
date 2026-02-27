@@ -156,7 +156,18 @@ class RowHighlighterApp {
 
     headerRects.forEach((rect, index) => {
       const element = this.headerElementPool[index]
-      const { x, y, width, height } = rect
+      let { x, y, width, height } = rect
+
+      // headerRects[0]: 列ヘッダー（A/B/C...）
+      // headerRects[1]: 行ヘッダー（1/2/3...）
+      if (index === 0 && activeCellRect) {
+        // Chỉ cao bằng 1 dòng, không kéo xuống toàn bộ vùng freeze
+        height = Math.min(height, activeCellRect.height)
+      } else if (index === 1) {
+        // Chỉ rộng bằng dải số dòng bên trái (~46px),
+        // không tràn vào các cột freeze (A, B, ...)
+        width = Math.min(width, 46)
+      }
 
       Object.assign(element.style, {
         position: 'absolute',
