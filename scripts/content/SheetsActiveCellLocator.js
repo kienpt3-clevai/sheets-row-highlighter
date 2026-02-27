@@ -218,17 +218,6 @@ class SheetsActiveCellLocator {
       return []
     }
 
-    const colHeaderContainer = document.querySelector(
-      '.fixed4-inner-container'
-    )
-    const rowHeaderContainer = document.querySelector(
-      '.grid4-inner-container'
-    )
-
-    if (!(colHeaderContainer instanceof HTMLElement) || !(rowHeaderContainer instanceof HTMLElement)) {
-      return []
-    }
-
     // アクティブセルのブラウザ座標
     const cellLeft = sheetRect.x + activeRect.x
     const cellRight = cellLeft + activeRect.width
@@ -236,23 +225,21 @@ class SheetsActiveCellLocator {
     const cellBottom = cellTop + activeRect.height
 
     /**
-     * ヘッダーセル候補の中から、アクティブセルと
-     * 同じ列 / 行に対応するものを幾何的に探す
-     * @param {HTMLElement} container
+     * ARIA ロールを使って列/行ヘッダーセルを探す
+     * @param {'columnheader' | 'rowheader'} role
      * @param {'x' | 'y'} axis
      * @returns {DOMRect | null}
      */
-    const findHeaderCellRect = (container, axis) => {
+    const findHeaderCellRectByRole = (role, axis) => {
       /** @type {{rect: DOMRect, score: number, distance: number} | null} */
       let best = null
 
       const elements = /** @type {NodeListOf<HTMLElement>} */ (
-        container.querySelectorAll('*')
+        document.querySelectorAll(`[role="${role}"]`)
       )
 
       elements.forEach((el) => {
         const rect = el.getBoundingClientRect()
-
         if (!rect || rect.width <= 0 || rect.height <= 0) {
           return
         }
@@ -297,8 +284,33 @@ class SheetsActiveCellLocator {
       return best ? best.rect : null
     }
 
-    const colHeaderCellRect = findHeaderCellRect(colHeaderContainer, 'x')
-    const rowHeaderCellRect = findHeaderCellRect(rowHeaderContainer, 'y')
+    const colHeaderCellRectRole = findHeaderCellRectByRole(
+      'columnheader',
+      'x'
+    )
+    const rowHeaderCellRectRole = findHeaderCellRectByRole('rowheader', 'y')
+
+    // 互換性のために従来のコンテナもフォールバックとして参照する
+    const colHeaderContainer = document.querySelector(
+      '.fixed4-inner-container'
+    )
+    const rowHeaderContainer = document.querySelector(
+      '.grid4-inner-container'
+    )
+
+    /** @type {DOMRect | null} */
+    const colHeaderCellRect =
+      colHeaderCellRectRole ||
+      (colHeaderContainer instanceof HTMLElement
+        ? colHeaderContainer.getBoundingClientRect()
+        : null)
+
+    /** @type {DOMRect | null} */
+    const rowHeaderCellRect =
+      rowHeaderCellRectRole ||
+      (rowHeaderContainer instanceof HTMLElement
+        ? rowHeaderContainer.getBoundingClientRect()
+        : null)
 
     /** @type {Array<HighlightRect>} */
     const result = []
