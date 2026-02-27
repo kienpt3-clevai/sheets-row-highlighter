@@ -218,79 +218,6 @@ class SheetsActiveCellLocator {
       return []
     }
 
-    // アクティブセルのブラウザ座標
-    const cellLeft = sheetRect.x + activeRect.x
-    const cellRight = cellLeft + activeRect.width
-    const cellTop = sheetRect.y + activeRect.y
-    const cellBottom = cellTop + activeRect.height
-
-    /**
-     * ARIA ロールを使って列/行ヘッダーセルを探す
-     * @param {'columnheader' | 'rowheader'} role
-     * @param {'x' | 'y'} axis
-     * @returns {DOMRect | null}
-     */
-    const findHeaderCellRectByRole = (role, axis) => {
-      /** @type {{rect: DOMRect, score: number, distance: number} | null} */
-      let best = null
-
-      const elements = /** @type {NodeListOf<HTMLElement>} */ (
-        document.querySelectorAll(`[role="${role}"]`)
-      )
-
-      elements.forEach((el) => {
-        const rect = el.getBoundingClientRect()
-        if (!rect || rect.width <= 0 || rect.height <= 0) {
-          return
-        }
-
-        if (axis === 'x') {
-          // 列ヘッダー: アクティブセルと X 方向で重なり、
-          // シート本体のすぐ上にある要素を優先する
-          const overlapX =
-            Math.min(cellRight, rect.right) - Math.max(cellLeft, rect.left)
-          if (overlapX <= 0) return
-
-          const distance = Math.abs(rect.bottom - sheetRect.y)
-          const score = overlapX
-
-          if (
-            !best ||
-            score > best.score ||
-            (score === best.score && distance < best.distance)
-          ) {
-            best = { rect, score, distance }
-          }
-        } else {
-          // 行ヘッダー: アクティブセルと Y 方向で重なり、
-          // シート本体のすぐ左にある要素を優先する
-          const overlapY =
-            Math.min(cellBottom, rect.bottom) - Math.max(cellTop, rect.top)
-          if (overlapY <= 0) return
-
-          const distance = Math.abs(rect.right - sheetRect.x)
-          const score = overlapY
-
-          if (
-            !best ||
-            score > best.score ||
-            (score === best.score && distance < best.distance)
-          ) {
-            best = { rect, score, distance }
-          }
-        }
-      })
-
-      return best ? best.rect : null
-    }
-
-    const colHeaderCellRectRole = findHeaderCellRectByRole(
-      'columnheader',
-      'x'
-    )
-    const rowHeaderCellRectRole = findHeaderCellRectByRole('rowheader', 'y')
-
-    // 互換性のために従来のコンテナもフォールバックとして参照する
     const colHeaderContainer = document.querySelector(
       '.fixed4-inner-container'
     )
@@ -298,47 +225,35 @@ class SheetsActiveCellLocator {
       '.grid4-inner-container'
     )
 
-    /** @type {DOMRect | null} */
-    const colHeaderCellRect =
-      colHeaderCellRectRole ||
-      (colHeaderContainer instanceof HTMLElement
-        ? colHeaderContainer.getBoundingClientRect()
-        : null)
+    if (!(colHeaderContainer instanceof HTMLElement) || !(rowHeaderContainer instanceof HTMLElement)) {
+      return []
+    }
 
-    /** @type {DOMRect | null} */
-    const rowHeaderCellRect =
-      rowHeaderCellRectRole ||
-      (rowHeaderContainer instanceof HTMLElement
-        ? rowHeaderContainer.getBoundingClientRect()
-        : null)
+    const colHeaderRect = colHeaderContainer.getBoundingClientRect()
+    const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
+
+    // アクティブセルのブラウザ座標
+    const cellLeft = sheetRect.x + activeRect.x
+    const cellTop = sheetRect.y + activeRect.y
 
     /** @type {Array<HighlightRect>} */
     const result = []
 
-    if (colHeaderCellRect) {
-      // 列ヘッダー（例: B / F / AR / AU）
-      result.push({
-        x: colHeaderCellRect.x,
-        y: colHeaderCellRect.y,
-        width: colHeaderCellRect.width,
-        height: colHeaderCellRect.height,
-      })
-    }
+    // 列ヘッダー（例: T）
+    result.push({
+      x: cellLeft,
+      y: colHeaderRect.y,
+      width: activeRect.width,
+      height: colHeaderRect.height,
+    })
 
-    if (rowHeaderCellRect) {
-      // 行ヘッダー（例: 25 / 29）
-      result.push({
-        x: rowHeaderCellRect.x,
-        y: rowHeaderCellRect.y,
-        width: rowHeaderCellRect.width,
-        height: rowHeaderCellRect.height,
-      })
-    }
-
-    // どちらも見つからなければヘッダーは描画しない
-    if (result.length === 0) {
-      return []
-    }
+    // 行ヘッダー（例: 23）
+    result.push({
+      x: rowHeaderRect.x,
+      y: cellTop,
+      width: rowHeaderRect.width,
+      height: activeRect.height,
+    })
 
     return result
   }
