@@ -59,7 +59,8 @@ class RowHighlighterApp {
       this.isRowEnabled
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
             isRow: true,
-            left: '0px',
+            // Cắt phần line đỏ bên trái theo R.left
+            left: `${Math.max(0, (this.headerRowLeft || 0) + 0)}px`,
             top: `${Math.max(0, y - halfOffset)}px`,
             width: '100%',
             height: `${Math.max(0, height - alignOffset)}px`,
@@ -70,7 +71,8 @@ class RowHighlighterApp {
         ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
             isRow: false,
             left: `${Math.max(0, x - halfOffset)}px`,
-            top: '0px',
+            // Cắt phần line đỏ phía trên theo C.top
+            top: `${Math.max(0, this.headerColTop || 0)}px`,
             width: `${Math.max(0, width - alignOffset)}px`,
             height: '100%',
           }))
