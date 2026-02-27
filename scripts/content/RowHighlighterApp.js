@@ -165,8 +165,8 @@ class RowHighlighterApp {
         // Cột: thu nhỏ nhẹ chiều cao để gọn hơn
         height = height * 0.9
       } else if (index === 1) {
-        // Hàng: chỉ tăng rất nhẹ (~10%) bề rộng quanh số hàng
-        width = width * 1.1
+        // Hàng: tăng thêm một chút nữa (~15%) bề rộng quanh số hàng
+        width = width * 1.15
       }
 
       Object.assign(element.style, {
