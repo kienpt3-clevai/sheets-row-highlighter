@@ -57,11 +57,11 @@ window.addEventListener('load', () => {
     )
     const headerColScale = Math.min(
       Math.max(parseFloat(headerColScaleInput.value, 10) || defaultHeaderColScale, 0.5),
-      2
+      4
     )
     const headerRowScale = Math.min(
       Math.max(parseFloat(headerRowScaleInput.value, 10) || defaultHeaderRowScale, 0.5),
-      2
+      4
     )
 
     chrome.storage.local.set(
