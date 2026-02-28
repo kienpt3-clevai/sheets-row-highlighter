@@ -6,9 +6,10 @@
 
 const ZOOM_LEVELS = [50, 75, 90, 100, 125, 150, 200]
 
-const ZOOM_MENU_SEARCH_DELAY_MS = 280
-const ZOOM_ENTER_DELAY_MS = 70
-const ZOOM_AFTER_ENTER_MS = 120
+// Sau Alt+/ → gõ → Enter. Tổng 1 lần zoom: 40+100+30 = 170 ms
+const ZOOM_MENU_SEARCH_DELAY_MS = 40   // chờ menu mở
+const ZOOM_ENTER_DELAY_MS = 100        // chờ menu filter xong rồi mới gửi Enter
+const ZOOM_AFTER_ENTER_MS = 30         // chờ đóng menu (cho onComplete nếu có)
 
 const MENU_SEARCH_SELECTORS = [
   'input.docs-omnibox-input',
@@ -200,10 +201,7 @@ function applyZoom(doc, targetPercent, onComplete) {
 
   setTimeout(() => {
     if (fillSearchAndEnter()) return
-    setTimeout(() => {
-      if (fillSearchAndEnter()) return
-      fallbackKeyDispatch()
-    }, 200)
+    fallbackKeyDispatch()
   }, ZOOM_MENU_SEARCH_DELAY_MS)
 }
 
@@ -214,7 +212,7 @@ let pendingZoomIn = 0
 /** @type {ReturnType<typeof setTimeout> | null} */
 let zoomDebounceTimer = null
 
-const ZOOM_DEBOUNCE_MS = 200
+const ZOOM_DEBOUNCE_MS = 200  // chờ bấm. Tổng từ lúc thôi bấm đến zoom xong: 200 + 170 = 370 ms
 
 /**
  * Apply pending zoom once after user has stopped pressing (one zoom to final level).

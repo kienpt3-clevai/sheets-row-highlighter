@@ -56,11 +56,12 @@ class SheetsActiveCellLocator {
       rightR = rects.reduce((a, r) => (r.right > a.right ? r : a))
     }
 
-    // Dùng tâm từng border làm vị trí grid line (line highlight căn tâm sẽ trùng dù line dày hay mỏng)
-    const leftLine = leftR.x + leftR.width / 2
-    const rightLine = rightR.x + rightR.width / 2
-    const topLine = topR.y + topR.height / 2
-    const bottomLine = bottomR.y + bottomR.height / 2
+    // Dùng cạnh trong (inner edge) làm grid line — đường 0-width, không phụ thuộc độ dày border Sheets.
+    // Căn line highlight trên điểm cố định này thì 2.25 và 4.25 đều đúng (không bị lệch thêm khi dày).
+    const leftLine = leftR.right
+    const rightLine = rightR.left
+    const topLine = topR.bottom
+    const bottomLine = bottomR.top
 
     return {
       x: leftLine - sheetRect.x,

@@ -23,6 +23,11 @@ class RowHighlighterApp {
     this.lineInsetRight = 0
     this.lineInsetTop = 0
     this.lineInsetBottom = 0
+    /** offsetHenry (px): trái -0.75, trên -0.5, dưới +0.75, phải +1 */
+    this.offsetHenryLeft = -0.75
+    this.offsetHenryTop = -0.5
+    this.offsetHenryBottom = 0.75
+    this.offsetHenryRight = 1
   }
 
   update() {
@@ -31,7 +36,7 @@ class RowHighlighterApp {
     Object.assign(this.appContainer.style, {
       position: 'absolute',
       pointerEvents: 'none',
-      overflow: 'hidden',
+      overflow: 'visible',
       ...this.locator.getSheetContainerStyle(),
     })
 
@@ -48,25 +53,29 @@ class RowHighlighterApp {
     const insR = this.lineInsetRight
     const insT = this.lineInsetTop
     const insB = this.lineInsetBottom
+    const oHL = this.offsetHenryLeft
+    const oHT = this.offsetHenryTop
+    const oHB = this.offsetHenryBottom
+    const oHR = this.offsetHenryRight
 
     highlightTaskList = (
       this.isRowEnabled
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
             isRow: true,
-            left: `${insL}px`,
-            top: `${Math.max(0, y - halfLine)}px`,
-            width: `calc(100% - ${insL + insR}px)`,
-            height: `${Math.max(0, height - insB + this.lineSize)}px`,
+            left: `${insL + oHL}px`,
+            top: `${y - halfLine + oHT}px`,
+            width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
+            height: `${height - insB + this.lineSize + oHB - oHT}px`,
           }))
         : []
     ).concat(
       this.isColEnabled
         ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
             isRow: false,
-            left: `${Math.max(0, x + insL - halfLine)}px`,
-            top: `${insT}px`,
-            width: `${Math.max(0, width - insL - insR + this.lineSize)}px`,
-            height: `calc(100% - ${insT + insB}px)`,
+            left: `${x + insL - halfLine + oHL}px`,
+            top: `${insT + oHT}px`,
+            width: `${width - insL - insR + this.lineSize + oHR - oHL}px`,
+            height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
           }))
         : []
     )
@@ -110,6 +119,7 @@ class RowHighlighterApp {
         position: 'absolute',
         pointerEvents: 'none',
         display: 'block',
+        boxSizing: 'border-box',
         backgroundColor: 'transparent',
         opacity: this.opacity,
         ...box,
