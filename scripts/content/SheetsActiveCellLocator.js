@@ -25,8 +25,8 @@ class SheetsActiveCellLocator {
   }
 
   /**
-   * 現在のアクティブセルの Rect を返す（単一選択ベース）
-   * Dùng cạnh trong của 4 border (cạnh chạm ô = line xanh dương) làm toạ độ, để line highlight căn tâm đúng cả khi dày (4.25).
+   * Trả về rect ô hiện tại (chọn đơn).
+   * Dùng cạnh trong của 4 border (line xanh Sheets) làm toạ độ để line highlight căn đúng khi dày.
    * @returns {HighlightRect | null}
    */
   getActiveCellRect() {
@@ -56,8 +56,7 @@ class SheetsActiveCellLocator {
       rightR = rects.reduce((a, r) => (r.right > a.right ? r : a))
     }
 
-    // Dùng cạnh trong (inner edge) làm grid line — đường 0-width, không phụ thuộc độ dày border Sheets.
-    // Căn line highlight trên điểm cố định này thì 2.25 và 4.25 đều đúng (không bị lệch thêm khi dày).
+    // Cạnh trong làm grid line; căn line highlight tại đây để không lệch khi đổi độ dày.
     const leftLine = leftR.right
     const rightLine = rightR.left
     const topLine = topR.bottom
@@ -95,19 +94,19 @@ class SheetsActiveCellLocator {
       }
     })
 
-    // 複数rectで full row/column になっているか（Shift+Space / Ctrl+Space）
+    // Nhiều rect ghép lại thành full hàng/cột thì không vẽ
     if (this._isFullRowOrColumnSelection(activeSelectionRectList, sheetRect, tolerance)) {
       return []
     }
 
-    // 1 rect で full row/column のもの（width/height が sheet 以上）
+    // Rect full hàng/cột (chiều rộng/cao bằng sheet)
     const rowOrColumnRectList = activeSelectionRectList.filter(
       (rect) =>
         rect.width >= sheetRect.width - tolerance ||
         rect.height >= sheetRect.height - tolerance
     )
 
-    // 行か列選択と同じ位置のセルを除外して返す
+    // Loại bỏ rect trùng vị trí full hàng/cột
     return activeSelectionRectList.filter(
       (rect) =>
         !rowOrColumnRectList.some(({ x, y, width, height }) =>
@@ -119,7 +118,7 @@ class SheetsActiveCellLocator {
   }
 
   /**
-   * 複数の rect をまとめたときに full row または full column になっているか
+   * Kiểm tra nhiều rect gộp lại có phải full hàng hoặc full cột không.
    * @param {Array<HighlightRect>} rectList
    * @param {DOMRect} sheetRect
    * @param {number} tolerance
@@ -128,7 +127,6 @@ class SheetsActiveCellLocator {
   _isFullRowOrColumnSelection(rectList, sheetRect, tolerance) {
     if (rectList.length === 0) return false
 
-    // 同じ行の rect をマージして幅を計算 → 幅が sheet 以上なら full row
     const rowGroups = this._groupRectsByRow(rectList, tolerance)
     for (const group of rowGroups) {
       const left = Math.min(...group.map((r) => r.x))
@@ -136,7 +134,6 @@ class SheetsActiveCellLocator {
       if (right - left >= sheetRect.width - tolerance) return true
     }
 
-    // 同じ列の rect をマージして高さを計算 → 高さが sheet 以上なら full column
     const colGroups = this._groupRectsByColumn(rectList, tolerance)
     for (const group of colGroups) {
       const top = Math.min(...group.map((r) => r.y))
@@ -166,7 +163,7 @@ class SheetsActiveCellLocator {
   }
 
   /**
-   * Group rects that overlap along one axis (transitively).
+   * Nhóm các rect chồng nhau theo một trục (bắc cầu).
    * @param {Array<HighlightRect>} rectList
    * @param {number} tolerance
    * @param {'x' | 'y'} pos
@@ -227,196 +224,8 @@ class SheetsActiveCellLocator {
     }
   }
 
-  /**
-   * アクティブセルに対応する列ヘッダーと行ヘッダーの Rect を返す
-   * （ブラウザ座標系での位置）
-   * @returns {Array<HighlightRect>}
-   */
-  getHeaderHighlightRectList() {
-    const activeRect = this.getActiveCellRect?.()
-    const sheetRect = this._getSheetContainerRect()
-
-    if (!activeRect || !sheetRect) {
-      return []
-    }
-
-    const colHeaderContainer = document.querySelector(
-      '.fixed4-inner-container'
-    )
-    const rowHeaderContainer = document.querySelector(
-      '.grid4-inner-container'
-    )
-
-    if (!(colHeaderContainer instanceof HTMLElement) || !(rowHeaderContainer instanceof HTMLElement)) {
-      return []
-    }
-
-    // アクティブセルのブラウザ座標
-    const cellLeft = sheetRect.x + activeRect.x
-    const cellRight = cellLeft + activeRect.width
-    const cellTop = sheetRect.y + activeRect.y
-    const cellBottom = cellTop + activeRect.height
-
-    /**
-     * ヘッダーコンテナ内から、アクティブセルに対応する
-     * ヘッダーセル（列/行）を幾何的に探す
-     * @param {HTMLElement} container
-     * @param {'x' | 'y'} axis
-     * @returns {DOMRect | null}
-     */
-    const findHeaderCellInContainer = (container, axis) => {
-      /** @type {{rect: DOMRect, score: number, distance: number} | null} */
-      let best = null
-
-      const elements = /** @type {NodeListOf<HTMLElement>} */ (
-        container.querySelectorAll('div, span')
-      )
-
-      elements.forEach((el) => {
-        const rect = el.getBoundingClientRect()
-        if (!rect || rect.width <= 0 || rect.height <= 0) {
-          return
-        }
-
-        if (axis === 'x') {
-          // 列ヘッダー: アクティブセルと X 方向で重なる要素の中から、
-          // シート本体のすぐ上にあるものを優先する
-          const overlapX =
-            Math.min(cellRight, rect.right) - Math.max(cellLeft, rect.left)
-          if (overlapX <= 0) return
-
-          const distance = Math.abs(rect.bottom - sheetRect.y)
-          const score = overlapX
-
-          if (
-            !best ||
-            score > best.score ||
-            (score === best.score && distance < best.distance)
-          ) {
-            best = { rect, score, distance }
-          }
-        } else {
-          // 行ヘッダー: アクティブセルと Y 方向で重なる要素の中から、
-          // シート本体のすぐ左にあるものを優先する
-          const overlapY =
-            Math.min(cellBottom, rect.bottom) - Math.max(cellTop, rect.top)
-          if (overlapY <= 0) return
-
-          const distance = Math.abs(rect.right - sheetRect.x)
-          const score = overlapY
-
-          if (
-            !best ||
-            score > best.score ||
-            (score === best.score && distance < best.distance)
-          ) {
-            best = { rect, score, distance }
-          }
-        }
-      })
-
-      return best ? best.rect : null
-    }
-
-    const colHeaderCellRect = findHeaderCellInContainer(
-      colHeaderContainer,
-      'x'
-    )
-    const rowHeaderCellRect = findHeaderCellInContainer(rowHeaderContainer, 'y')
-
-    /** @type {Array<HighlightRect>} */
-    const result = []
-
-    // 列ヘッダー（例: A/B/C/D...）
-    // freeze 有無や行の高さに関わらず、視覚的な「1 dòng header」分だけを塗る
-    const colHeaderRect = colHeaderContainer.getBoundingClientRect()
-
-    // Thử đọc zoom từ toolbar; nếu không được, fallback theo tỉ lệ chiều cao container
-    const zoomFromToolbar = typeof this._getZoomScale === 'function' ? this._getZoomScale() : 0
-
-    // Ghi lại chiều cao container ở lần đầu để làm mốc 100%
-    if (!this._baseHeaderContainerHeight) {
-      this._baseHeaderContainerHeight = colHeaderRect.height
-    }
-    const heightScale =
-      this._baseHeaderContainerHeight > 0
-        ? colHeaderRect.height / this._baseHeaderContainerHeight
-        : 1
-
-    const zoomScale =
-      zoomFromToolbar && Number.isFinite(zoomFromToolbar) && zoomFromToolbar > 0
-        ? zoomFromToolbar
-        : heightScale
-
-    const baseHeaderHeight = 26 * zoomScale // px, scale theo zoom thực tế
-    const colBandInset = 0 // dịch sát về bên trái hơn một chút
-    const colBandWidth = Math.max(0, activeRect.width - colBandInset * 2)
-    result.push({
-      x: cellLeft + colBandInset,
-      // Bắt đầu ngay từ mép trên vùng dữ liệu (chữ cột AH),
-      // không ăn vào hàng dấu "+" phía trên.
-      y: sheetRect.y,
-      width: colBandWidth,
-      height: Math.min(colHeaderRect.height, baseHeaderHeight),
-    })
-
-    // 行ヘッダー（例: 2/3/12...）
-    const rowHeaderRect = rowHeaderContainer.getBoundingClientRect()
-    const bandWidth = Math.min(rowHeaderRect.width, 40)
-    const rowX = rowHeaderRect.x
-    const rowY = rowHeaderCellRect ? rowHeaderCellRect.y : cellTop
-    const rowHeight = rowHeaderCellRect
-      ? rowHeaderCellRect.height
-      : activeRect.height
-
-    result.push({
-      x: rowX,
-      y: rowY,
-      width: bandWidth,
-      height: rowHeight,
-    })
-
-    return result
-  }
-
   getSheetKey() {
     const { pathname } = location
     return pathname.match(/d\/([^/]*)/)?.[1] || pathname
-  }
-
-  /**
-   * Google Sheets のツールバーからズーム倍率を推定する
-   * 例: "75%" / "100%" / "150%"
-   * @returns {number} ズーム倍率 (1.0 = 100%)
-   */
-  _getZoomScale() {
-    try {
-      /** @type {HTMLElement | null} */
-      const zoomButton =
-        document.querySelector('[aria-label="Zoom"]') ||
-        document.querySelector('[aria-label="Thu phóng"]') ||
-        document.querySelector('[aria-label="Phóng to thu nhỏ"]')
-
-      if (!zoomButton) return 1
-
-      const text =
-        zoomButton.textContent ||
-        /** @type {HTMLElement | null} */ (
-          zoomButton.querySelector('.goog-flat-menu-button-caption')
-        )?.textContent ||
-        ''
-
-      const match = text.match(/(\d+)\s*%/)
-      if (!match) return 1
-
-      const value = Number(match[1])
-      if (!Number.isFinite(value) || value <= 0) return 1
-
-      // Giới hạn trong khoảng hợp lý 25% - 400%
-      const clamped = Math.max(25, Math.min(400, value))
-      return clamped / 100
-    } catch {
-      return 1
-    }
   }
 }

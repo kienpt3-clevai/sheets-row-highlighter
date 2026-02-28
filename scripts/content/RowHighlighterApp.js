@@ -129,7 +129,7 @@ class RowHighlighterApp {
   }
 
   /**
-   * 範囲が重なるRectをマージして新しいリストを返す
+   * Gộp các rect chồng nhau theo trục dim, trả về danh sách mới.
    * @param {Array<HighlightRect>} rectList
    * @param {'x' | 'y'} dim
    * @returns {Array<HighlightRect>}

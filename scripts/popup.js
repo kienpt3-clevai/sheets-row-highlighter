@@ -14,11 +14,11 @@ window.addEventListener('load', () => {
   const lineSizeInput = document.getElementById('lineSize')
   const resetButton = document.getElementById('reset')
 
-  const defaultColor = '#c2185b'
-  const defaultOpacity = '0.8'
-  const defaultRow = true
-  const defaultColumn = true
-  const defaultLineSize = 3.25
+  const defaultColor = typeof DEFAULT_COLOR !== 'undefined' ? DEFAULT_COLOR : '#c2185b'
+  const defaultOpacity = typeof DEFAULT_OPACITY !== 'undefined' ? DEFAULT_OPACITY : '0.8'
+  const defaultRow = typeof DEFAULT_ROW !== 'undefined' ? DEFAULT_ROW : true
+  const defaultColumn = typeof DEFAULT_COLUMN !== 'undefined' ? DEFAULT_COLUMN : true
+  const defaultLineSize = typeof DEFAULT_LINE_SIZE !== 'undefined' ? DEFAULT_LINE_SIZE : 3.25
 
   const customColors = [
     '#0e65eb',
@@ -38,7 +38,7 @@ window.addEventListener('load', () => {
     hues: 4,
   })
 
-  // 設定保存
+  // Lưu cấu hình
   const save = async () => {
     const color = hueb.color
     const opacity = Math.min(
@@ -84,7 +84,7 @@ window.addEventListener('load', () => {
     })
   }
 
-  // 設定リセット
+  // Nút reset về mặc định
   resetButton.addEventListener('click', () => {
     hueb.off('change', save)
 
@@ -111,8 +111,7 @@ window.addEventListener('load', () => {
   document.getElementById('prevColor').addEventListener('click', () => cycleColor(-1))
   document.getElementById('nextColor').addEventListener('click', () => cycleColor(1))
 
-  // 設定読み込み
-  // 初期表示時: lấy config cho sheet hiện tại
+  // Khi mở popup: lấy cấu hình cho sheet hiện tại
   ;(async () => {
     let sheetKey = 'default'
     try {
@@ -142,7 +141,7 @@ window.addEventListener('load', () => {
     })
   })()
 
-  // ショートカット入力のメッセージを受け取ったとき
+  // Nhận message khi user bấm phím tắt (toggle row/column)
   chrome.runtime.onMessage.addListener((request) => {
     if (request.type !== 'commands') return
 

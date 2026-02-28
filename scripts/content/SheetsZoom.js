@@ -1,15 +1,14 @@
 // @ts-check
 /**
- * Zoom in/out on Google Sheets toolbar by simulating Alt+/, "Zoom: X%", Enter.
- * Reads current zoom from toolbar DOM (aria-label "Zoom list. X% selected.").
+ * Zoom in/out trên Google Sheets: mô phỏng Alt+/, gõ "Zoom: X%", Enter.
+ * Đọc zoom hiện tại từ DOM toolbar (aria-label "Zoom list. X% selected.").
  */
 
 const ZOOM_LEVELS = [50, 75, 90, 100, 125, 150, 200]
 
-// Sau Alt+/ → gõ → Enter. Tổng 1 lần zoom: 40+100+30 = 170 ms
-const ZOOM_MENU_SEARCH_DELAY_MS = 40   // chờ menu mở
-const ZOOM_ENTER_DELAY_MS = 100        // chờ menu filter xong rồi mới gửi Enter
-const ZOOM_AFTER_ENTER_MS = 30         // chờ đóng menu (cho onComplete nếu có)
+const ZOOM_MENU_SEARCH_DELAY_MS = 40   // Chờ menu mở
+const ZOOM_ENTER_DELAY_MS = 130        // Chờ menu lọc xong rồi gửi Enter
+const ZOOM_AFTER_ENTER_MS = 30         // Chờ đóng menu
 
 const MENU_SEARCH_SELECTORS = [
   'input.docs-omnibox-input',
@@ -23,7 +22,7 @@ const MENU_SEARCH_SELECTORS = [
 ]
 
 /**
- * Find visible text input in node and its shadow roots / iframes.
+ * Tìm ô nhập văn bản hiển thị trong node và shadow roots / iframes.
  * @param {Document | DocumentFragment | Element} node
  * @returns {HTMLInputElement | null}
  */
@@ -71,7 +70,7 @@ function findMenuSearchInputInDoc(node) {
 }
 
 /**
- * Find the "Search the Menus" input (current doc, top doc, or iframes).
+ * Tìm ô "Search the Menus" (doc hiện tại, doc top, hoặc iframe).
  * @param {Document} doc
  * @returns {HTMLInputElement | null}
  */
@@ -89,7 +88,7 @@ function findMenuSearchInput(doc) {
 
 /**
  * @param {Document} doc
- * @returns {number} Current zoom percent, or 100 if not found.
+ * @returns {number} Phần trăm zoom hiện tại, hoặc 100 nếu không đọc được.
  */
 function getCurrentZoomPercent(doc) {
   const el = doc.querySelector('[role="option"][aria-label*="Zoom list"]')
@@ -102,10 +101,10 @@ function getCurrentZoomPercent(doc) {
 }
 
 /**
- * Target zoom after moving N steps (positive = zoom in, negative = zoom out).
+ * Mức zoom đích sau khi dịch N bước (dương = phóng to, âm = thu nhỏ).
  * @param {number} current
  * @param {number} steps
- * @returns {number} Target percent from ZOOM_LEVELS.
+ * @returns {number} Phần trăm đích trong ZOOM_LEVELS.
  */
 function getTargetZoomPercentBySteps(current, steps) {
   const idx = ZOOM_LEVELS.indexOf(current)
@@ -123,7 +122,7 @@ const KEY_TO_CODE = {
 }
 
 /**
- * Dispatch a key event on the given target.
+ * Gửi sự kiện phím lên target.
  * @param {Element} target
  * @param {string} type
  * @param {string} key
@@ -145,10 +144,10 @@ function dispatchKey(target, type, key, code, altKey = false) {
 }
 
 /**
- * Open Search the Menus with Alt+/, then type "Zoom: X%" and Enter.
+ * Mở Search the Menus (Alt+/), gõ "Zoom: X%" rồi Enter.
  * @param {Document} doc
  * @param {number} targetPercent
- * @param {() => void} [onComplete] Called after Enter is sent and dialog has time to close.
+ * @param {() => void} [onComplete] Gọi sau khi gửi Enter và đợi đóng menu.
  */
 function applyZoom(doc, targetPercent, onComplete) {
   const root = doc.documentElement || doc.body
@@ -212,10 +211,10 @@ let pendingZoomIn = 0
 /** @type {ReturnType<typeof setTimeout> | null} */
 let zoomDebounceTimer = null
 
-const ZOOM_DEBOUNCE_MS = 200  // chờ bấm. Tổng từ lúc thôi bấm đến zoom xong: 200 + 170 = 370 ms
+const ZOOM_DEBOUNCE_MS = 200  // Chờ user thôi bấm rồi mới zoom một lần
 
 /**
- * Apply pending zoom once after user has stopped pressing (one zoom to final level).
+ * Áp dụng zoom đang chờ sau khi user thôi bấm (một lần tới mức đích).
  * @param {Document} doc
  */
 function applyPendingZoom(doc) {
@@ -262,5 +261,5 @@ function zoomIn(doc) {
   scheduleApplyZoom(doc)
 }
 
-// Expose for main.js (same global in content script)
+// Cho main.js gọi (cùng global trong content script)
 window.__SheetsZoom = { zoomIn, zoomOut }

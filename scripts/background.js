@@ -1,10 +1,9 @@
-const defaultRow = true
-const defaultColumn = false
+importScripts('scripts/content/types.js')
 
 chrome.commands.onCommand.addListener((command) => {
   chrome.storage.local.get(['row', 'column'], (items) => {
-    let row = items.row ?? defaultRow
-    let column = items.column ?? defaultColumn
+    let row = items.row ?? DEFAULT_ROW
+    let column = items.column ?? DEFAULT_COLUMN
 
     switch (command) {
       case 'toggleRow': {
@@ -29,12 +28,13 @@ chrome.commands.onCommand.addListener((command) => {
 
     chrome.storage.local.set({ row, column })
 
-    chrome.runtime
-      .sendMessage({
-        type: 'commands',
-        row,
-        column,
-      })
-      .catch(() => {})
+    // Gửi lệnh xuống tab đang active để content script cập nhật highlight ngay
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'applyCommand', row, column }).catch(() => {})
+      }
+    })
+
+    chrome.runtime.sendMessage({ type: 'commands', row, column }).catch(() => {})
   })
 })

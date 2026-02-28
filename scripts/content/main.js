@@ -1,17 +1,12 @@
 // @ts-check
 /// <reference path="./SheetsActiveCellLocator.js" />
-/// <reference path="./ExcelActiveCellLocator.js" />
 /// <reference path="./RowHighlighterApp.js" />
-
-const isSheetsHost = location.host === 'docs.google.com'
 
 const appContainer = document.createElement('div')
 appContainer.id = 'rh-app-container'
 document.body.appendChild(appContainer)
 
-const locator = isSheetsHost
-  ? new SheetsActiveCellLocator()
-  : new ExcelActiveCellLocator()
+const locator = new SheetsActiveCellLocator()
 
 const app = new RowHighlighterApp(appContainer, locator)
 const updateHighlight = app.update.bind(app)
@@ -22,8 +17,8 @@ window.addEventListener('keyup', updateHighlight)
 window.addEventListener('resize', updateHighlight)
 window.addEventListener('scroll', updateHighlight, true)
 
-// Zoom shortcuts: Ctrl+, = zoom out, Ctrl+. = zoom in (Google Sheets only, top frame)
-if (isSheetsHost && window === window.top && typeof window.__SheetsZoom !== 'undefined') {
+// Phím tắt zoom: Ctrl+, thu nhỏ, Ctrl+. phóng to (chỉ frame chính)
+if (window === window.top && typeof window.__SheetsZoom !== 'undefined') {
   document.addEventListener(
     'keydown',
     (e) => {
@@ -42,7 +37,7 @@ if (isSheetsHost && window === window.top && typeof window.__SheetsZoom !== 'und
   )
 }
 
-// @ts-ignore chrome.xxxの参照エラーを無視
+// @ts-ignore
 const storage = chrome.storage
 
 const loadSettings = () => {
@@ -88,9 +83,28 @@ loadSettings()
 
 storage.onChanged.addListener(loadSettings)
 
-// 設定更新時の再描画 / sheetKey 取得
-// @ts-ignore chrome.xxxの参照エラーを無視
+// Cập nhật khi popup/background gửi message; trả sheetKey khi được hỏi
+// @ts-ignore
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.type === 'applyCommand') {
+    app.isRowEnabled = message.row ?? app.isRowEnabled
+    app.isColEnabled = message.column ?? app.isColEnabled
+    updateHighlight()
+    // Đồng bộ vào sheetSettings để lần sau load đúng
+    const sheetKey =
+      typeof locator.getSheetKey === 'function' ? locator.getSheetKey() : 'default'
+    chrome.storage.local.get(['sheetSettings'], (items) => {
+      const all = items.sheetSettings || {}
+      const cur = all[sheetKey] || {}
+      all[sheetKey] = {
+        ...cur,
+        row: app.isRowEnabled,
+        column: app.isColEnabled,
+        updatedAt: Date.now(),
+      }
+      chrome.storage.local.set({ sheetSettings: all })
+    })
+  }
   if (message.type === 'settingsUpdated') {
     if (message.settings && typeof message.settings === 'object') {
       const current = message.settings
