@@ -13,32 +13,15 @@ class RowHighlighterApp {
     /** @type {Array<HTMLElement>} */
     this.elementPool = []
 
-    /** @type {HTMLElement} */
-    this.headerContainer = document.createElement('div')
-    this.headerContainer.id = 'rh-header-container'
-    document.body.appendChild(this.headerContainer)
-
-    /** @type {Array<HTMLElement>} */
-    this.headerElementPool = []
-
     this.backgroundColor = '#0e65eb'
     this.opacity = '0.1'
     this.lineSize = 2
     this.isRowEnabled = true
     this.isColEnabled = false
-    this.headerColTop = 50
-    this.headerColScale = -49
-    this.headerRowLeft = 49
-    this.headerRowRight = -56
   }
 
   update() {
     const rectList = this.locator.getHighlightRectList()
-    /** @type {HighlightRect | null | undefined} */
-    const activeCellRect =
-      typeof this.locator.getActiveCellRect === 'function'
-        ? this.locator.getActiveCellRect()
-        : null
 
     Object.assign(this.appContainer.style, {
       position: 'absolute',
@@ -59,9 +42,7 @@ class RowHighlighterApp {
       this.isRowEnabled
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
             isRow: true,
-            // Cắt line đỏ ngang theo R.left, không vượt qua phần header
-            left: `${Math.max(0, this.headerRowLeft || 0)}px`,
-            // đẩy line đỏ lên cao thêm một chút
+            left: '0px',
             top: `${Math.max(0, y - alignOffset)}px`,
             width: '100%',
             height: `${Math.max(0, height)}px`,
@@ -71,20 +52,13 @@ class RowHighlighterApp {
       this.isColEnabled
         ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
             isRow: false,
-            // Cột: cắt line đỏ dọc phía trên theo C.top
             left: `${Math.max(0, x - halfOffset)}px`,
-            top: `${Math.max(0, this.headerColTop || 0)}px`,
+            top: '0px',
             width: `${Math.max(0, width - alignOffset)}px`,
             height: '100%',
           }))
         : []
     )
-
-    // Khi chọn cả hàng hoặc cả cột (Shift+Space / Ctrl+Space),
-    // getHighlightRectList() trả về [] nhưng vẫn có activeCellRect.
-    // Trong trường hợp này ta không vẽ header highlight (opa 0.4).
-    const isFullRowOrColumnSelection =
-      Array.isArray(rectList) && rectList.length === 0 && !!activeCellRect
 
     const diff = highlightTaskList.length - this.elementPool.length
 
@@ -129,76 +103,6 @@ class RowHighlighterApp {
         opacity: this.opacity,
         ...box,
         ...border,
-      })
-    })
-
-    // =======================
-    // Header highlight (T / 23)
-    // =======================
-    /** @type {Array<HighlightRect>} */
-    const headerRects =
-      !isFullRowOrColumnSelection &&
-      typeof this.locator.getHeaderHighlightRectList === 'function'
-        ? this.locator.getHeaderHighlightRectList()
-        : []
-
-    Object.assign(this.headerContainer.style, {
-      position: 'absolute',
-      pointerEvents: 'none',
-      left: '0px',
-      top: '0px',
-      width: '100%',
-      height: '100%',
-      overflow: 'hidden',
-    })
-
-    const headerDiff = headerRects.length - this.headerElementPool.length
-
-    if (0 < headerDiff) {
-      Array.from({ length: headerDiff }).forEach(() => {
-        const element = document.createElement('div')
-        this.headerElementPool.push(element)
-        this.headerContainer.appendChild(element)
-      })
-    }
-
-    if (headerDiff < 0) {
-      this.headerElementPool.slice(headerDiff).forEach((element) => {
-        element.style.display = 'none'
-      })
-    }
-
-    headerRects.forEach((rect, index) => {
-      const element = this.headerElementPool[index]
-      let { x, y, width, height } = rect
-
-      // headerRects[0]: 列ヘッダー（A/B/C...）
-      // headerRects[1]: 行ヘッダー（1/2/3...）
-      if (index === 0) {
-        // Điều chỉnh cạnh trên & cạnh dưới theo C.top / C.bot (px)
-        const topOffset = this.headerColTop || 0
-        const bottomOffset = this.headerColScale || 0
-        y += topOffset
-        height = Math.max(0, height - topOffset - bottomOffset)
-      } else if (index === 1) {
-        // Điều chỉnh bề rộng theo R.left / R.right (px)
-        const leftOffset = this.headerRowLeft || 0
-        const rightOffset = this.headerRowRight || 0
-        x += leftOffset
-        width = Math.max(0, width - leftOffset - rightOffset)
-      }
-
-      Object.assign(element.style, {
-        position: 'absolute',
-        pointerEvents: 'none',
-        display: 'block',
-        backgroundColor: this.backgroundColor,
-        opacity: '0.4',
-        left: `${x}px`,
-        top: `${y}px`,
-        width: `${width}px`,
-        height: `${height}px`,
-        border: 'none',
       })
     })
   }

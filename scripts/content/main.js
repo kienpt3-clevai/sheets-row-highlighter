@@ -60,10 +60,6 @@ const loadSettings = () => {
     app.isRowEnabled = current.row ?? app.isRowEnabled
     app.isColEnabled = current.column ?? app.isColEnabled
     app.lineSize = current.lineSize ?? app.lineSize
-    app.headerColTop = current.headerColTop ?? app.headerColTop
-    app.headerColScale = current.headerColScale ?? app.headerColScale
-    app.headerRowLeft = current.headerRowLeft ?? app.headerRowLeft
-    app.headerRowRight = current.headerRowRight ?? app.headerRowRight
 
     updateHighlight()
   })
@@ -83,10 +79,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       app.isRowEnabled = current.row ?? app.isRowEnabled
       app.isColEnabled = current.column ?? app.isColEnabled
       app.lineSize = current.lineSize ?? app.lineSize
-      app.headerColTop = current.headerColTop ?? app.headerColTop
-      app.headerColScale = current.headerColScale ?? app.headerColScale
-      app.headerRowLeft = current.headerRowLeft ?? app.headerRowLeft
-      app.headerRowRight = current.headerRowRight ?? app.headerRowRight
 
       updateHighlight()
     } else {

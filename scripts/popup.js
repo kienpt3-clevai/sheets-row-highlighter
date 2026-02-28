@@ -12,10 +12,6 @@ window.addEventListener('load', () => {
   const rowInput = document.getElementById('row')
   const columnInput = document.getElementById('column')
   const lineSizeInput = document.getElementById('lineSize')
-  const headerColTopInput = document.getElementById('headerColTop')
-  const headerColScaleInput = document.getElementById('headerColScale')
-  const headerRowLeftInput = document.getElementById('headerRowLeft')
-  const headerRowRightInput = document.getElementById('headerRowRight')
   const resetButton = document.getElementById('reset')
 
   const defaultColor = '#c2185b'
@@ -23,10 +19,6 @@ window.addEventListener('load', () => {
   const defaultRow = true
   const defaultColumn = true
   const defaultLineSize = 1.75
-  const defaultHeaderColTop = 50
-  const defaultHeaderColScale = -49
-  const defaultHeaderRowLeft = 49
-  const defaultHeaderRowRight = -56
 
   const customColors = [
     '#0e65eb',
@@ -59,22 +51,6 @@ window.addEventListener('load', () => {
       Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
       5
     )
-    const headerColTop = Math.min(
-      Math.max(parseFloat(headerColTopInput.value, 10) || defaultHeaderColTop, -60),
-      60
-    )
-    const headerColScale = Math.min(
-      Math.max(parseFloat(headerColScaleInput.value, 10) || defaultHeaderColScale, -60),
-      60
-    )
-    const headerRowLeft = Math.min(
-      Math.max(parseFloat(headerRowLeftInput.value, 10) || defaultHeaderRowLeft, -60),
-      60
-    )
-    const headerRowRight = Math.min(
-      Math.max(parseFloat(headerRowRightInput.value, 10) || defaultHeaderRowRight, -60),
-      60
-    )
 
     // Hỏi content script để lấy sheetKey hiện tại
     let sheetKey = 'default'
@@ -95,10 +71,6 @@ window.addEventListener('load', () => {
         row,
         column,
         lineSize,
-        headerColTop,
-        headerColScale,
-        headerRowLeft,
-        headerRowRight,
         updatedAt: Date.now(),
       }
       allSettings[sheetKey] = settings
@@ -121,10 +93,6 @@ window.addEventListener('load', () => {
     rowInput.checked = defaultRow
     columnInput.checked = defaultColumn
     lineSizeInput.value = defaultLineSize
-    headerColTopInput.value = defaultHeaderColTop
-    headerColScaleInput.value = defaultHeaderColScale
-    headerRowLeftInput.value = defaultHeaderRowLeft
-    headerRowRightInput.value = defaultHeaderRowRight
 
     // Lưu lại mặc định cho sheet hiện tại
     void save()
@@ -165,20 +133,12 @@ window.addEventListener('load', () => {
       rowInput.checked = current.row ?? defaultRow
       columnInput.checked = current.column ?? defaultColumn
       lineSizeInput.value = current.lineSize ?? defaultLineSize
-      headerColTopInput.value = current.headerColTop ?? defaultHeaderColTop
-      headerColScaleInput.value = current.headerColScale ?? defaultHeaderColScale
-      headerRowLeftInput.value = current.headerRowLeft ?? defaultHeaderRowLeft
-      headerRowRightInput.value = current.headerRowRight ?? defaultHeaderRowRight
 
       hueb.on('change', save)
       opacityInput.addEventListener('change', () => void save())
       rowInput.addEventListener('change', () => void save())
       columnInput.addEventListener('change', () => void save())
       lineSizeInput.addEventListener('change', () => void save())
-      headerColTopInput.addEventListener('change', () => void save())
-      headerColScaleInput.addEventListener('change', () => void save())
-      headerRowLeftInput.addEventListener('change', () => void save())
-      headerRowRightInput.addEventListener('change', () => void save())
     })
   })()
 
