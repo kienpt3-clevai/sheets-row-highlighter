@@ -26,6 +26,7 @@ class SheetsActiveCellLocator {
 
   /**
    * 現在のアクティブセルの Rect を返す（単一選択ベース）
+   * Dùng cạnh trong của 4 border (cạnh chạm ô = line xanh dương) làm toạ độ, để line highlight căn tâm đúng cả khi dày (4.25).
    * @returns {HighlightRect | null}
    */
   getActiveCellRect() {
@@ -38,14 +39,34 @@ class SheetsActiveCellLocator {
       return null
     }
 
-    const topBorderRect = activeBorderList[0].getBoundingClientRect()
-    const leftBorderRect = activeBorderList[3].getBoundingClientRect()
+    const rects = Array.from(activeBorderList).map((el) => el.getBoundingClientRect())
+    const horizontal = rects.filter((r) => r.width >= r.height)
+    const vertical = rects.filter((r) => r.height > r.width)
+
+    let topR, bottomR, leftR, rightR
+    if (horizontal.length >= 2 && vertical.length >= 2) {
+      topR = horizontal.reduce((a, r) => (r.top < a.top ? r : a))
+      bottomR = horizontal.reduce((a, r) => (r.bottom > a.bottom ? r : a))
+      leftR = vertical.reduce((a, r) => (r.left < a.left ? r : a))
+      rightR = vertical.reduce((a, r) => (r.right > a.right ? r : a))
+    } else {
+      topR = rects.reduce((a, r) => (r.top < a.top ? r : a))
+      bottomR = rects.reduce((a, r) => (r.bottom > a.bottom ? r : a))
+      leftR = rects.reduce((a, r) => (r.left < a.left ? r : a))
+      rightR = rects.reduce((a, r) => (r.right > a.right ? r : a))
+    }
+
+    // Dùng tâm từng border làm vị trí grid line (line highlight căn tâm sẽ trùng dù line dày hay mỏng)
+    const leftLine = leftR.x + leftR.width / 2
+    const rightLine = rightR.x + rightR.width / 2
+    const topLine = topR.y + topR.height / 2
+    const bottomLine = bottomR.y + bottomR.height / 2
 
     return {
-      x: topBorderRect.x - sheetRect.x,
-      y: topBorderRect.y - sheetRect.y,
-      width: topBorderRect.width,
-      height: leftBorderRect.height,
+      x: leftLine - sheetRect.x,
+      y: topLine - sheetRect.y,
+      width: rightLine - leftLine,
+      height: bottomLine - topLine,
     }
   }
 

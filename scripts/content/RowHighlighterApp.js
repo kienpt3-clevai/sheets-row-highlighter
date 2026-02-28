@@ -18,11 +18,11 @@ class RowHighlighterApp {
     this.lineSize = 3.25
     this.isRowEnabled = true
     this.isColEnabled = false
-    /** Inset (px): line position offset from cell boundaries */
-    this.lineInsetLeft = 1
-    this.lineInsetRight = 0.5
+    /** Inset (px): offset from grid line; 0 = tâm line trùng line xanh dương (cần cho line dày 4.25) */
+    this.lineInsetLeft = 0
+    this.lineInsetRight = 0
     this.lineInsetTop = 0
-    this.lineInsetBottom = 3.5
+    this.lineInsetBottom = 0
   }
 
   update() {
@@ -38,6 +38,9 @@ class RowHighlighterApp {
     const borderWidth = `${this.lineSize}px`
     const borderStyle = `solid ${this.backgroundColor}`
 
+    // Tâm line trùng line xanh dương; dày đều về 2 phía (cả 4 line: trên, dưới, trái, phải)
+    const halfLine = this.lineSize / 2
+
     /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
 
@@ -51,18 +54,18 @@ class RowHighlighterApp {
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
             isRow: true,
             left: `${insL}px`,
-            top: `${Math.max(0, y)}px`,
+            top: `${Math.max(0, y - halfLine)}px`,
             width: `calc(100% - ${insL + insR}px)`,
-            height: `${Math.max(0, height - insB)}px`,
+            height: `${Math.max(0, height - insB + this.lineSize)}px`,
           }))
         : []
     ).concat(
       this.isColEnabled
         ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
             isRow: false,
-            left: `${Math.max(0, x + insL)}px`,
+            left: `${Math.max(0, x + insL - halfLine)}px`,
             top: `${insT}px`,
-            width: `${Math.max(0, width - insL - insR)}px`,
+            width: `${Math.max(0, width - insL - insR + this.lineSize)}px`,
             height: `calc(100% - ${insT + insB}px)`,
           }))
         : []

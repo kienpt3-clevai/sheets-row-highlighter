@@ -22,6 +22,26 @@ window.addEventListener('keyup', updateHighlight)
 window.addEventListener('resize', updateHighlight)
 window.addEventListener('scroll', updateHighlight, true)
 
+// Zoom shortcuts: Ctrl+, = zoom out, Ctrl+. = zoom in (Google Sheets only, top frame)
+if (isSheetsHost && window === window.top && typeof window.__SheetsZoom !== 'undefined') {
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if (!e.ctrlKey) return
+      if (e.key === ',') {
+        e.preventDefault()
+        e.stopPropagation()
+        window.__SheetsZoom.zoomOut(document)
+      } else if (e.key === '.') {
+        e.preventDefault()
+        e.stopPropagation()
+        window.__SheetsZoom.zoomIn(document)
+      }
+    },
+    true
+  )
+}
+
 // @ts-ignore chrome.xxxの参照エラーを無視
 const storage = chrome.storage
 

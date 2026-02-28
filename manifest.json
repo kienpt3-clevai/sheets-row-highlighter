@@ -21,6 +21,7 @@
         "scripts/content/SheetsActiveCellLocator.js",
         "scripts/content/ExcelActiveCellLocator.js",
         "scripts/content/RowHighlighterApp.js",
+        "scripts/content/SheetsZoom.js",
         "scripts/content/main.js"
       ],
       "all_frames": true
