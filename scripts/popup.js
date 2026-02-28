@@ -12,6 +12,7 @@ window.addEventListener('load', () => {
   const rowInput = document.getElementById('row')
   const columnInput = document.getElementById('column')
   const lineSizeInput = document.getElementById('lineSize')
+  const cellOpacityInput = document.getElementById('cellOpacity')
   const resetButton = document.getElementById('reset')
 
   const defaultColor = typeof DEFAULT_COLOR !== 'undefined' ? DEFAULT_COLOR : '#c2185b'
@@ -19,6 +20,7 @@ window.addEventListener('load', () => {
   const defaultRow = typeof DEFAULT_ROW !== 'undefined' ? DEFAULT_ROW : true
   const defaultColumn = typeof DEFAULT_COLUMN !== 'undefined' ? DEFAULT_COLUMN : true
   const defaultLineSize = typeof DEFAULT_LINE_SIZE !== 'undefined' ? DEFAULT_LINE_SIZE : 3.25
+  const defaultCellOpacity = typeof DEFAULT_CELL_OPACITY !== 'undefined' ? DEFAULT_CELL_OPACITY : 0.05
 
   const customColors = [
     '#0e65eb',
@@ -51,6 +53,13 @@ window.addEventListener('load', () => {
       Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
       5
     )
+    const cellOpacity = Math.min(
+      Math.max(
+        Math.round((parseFloat(cellOpacityInput.value, 10) || defaultCellOpacity) * 20) / 20,
+        0
+      ),
+      0.5
+    )
 
     // Hỏi content script để lấy sheetKey hiện tại
     let sheetKey = 'default'
@@ -71,6 +80,7 @@ window.addEventListener('load', () => {
         row,
         column,
         lineSize,
+        cellOpacity,
         updatedAt: Date.now(),
       }
       allSettings[sheetKey] = settings
@@ -93,6 +103,7 @@ window.addEventListener('load', () => {
     rowInput.checked = defaultRow
     columnInput.checked = defaultColumn
     lineSizeInput.value = defaultLineSize
+    cellOpacityInput.value = String(defaultCellOpacity)
 
     // Lưu lại mặc định cho sheet hiện tại
     void save()
@@ -132,12 +143,14 @@ window.addEventListener('load', () => {
       rowInput.checked = current.row ?? defaultRow
       columnInput.checked = current.column ?? defaultColumn
       lineSizeInput.value = current.lineSize ?? defaultLineSize
+      cellOpacityInput.value = String(current.cellOpacity ?? defaultCellOpacity)
 
       hueb.on('change', save)
       opacityInput.addEventListener('change', () => void save())
       rowInput.addEventListener('change', () => void save())
       columnInput.addEventListener('change', () => void save())
       lineSizeInput.addEventListener('change', () => void save())
+      cellOpacityInput.addEventListener('change', () => void save())
     })
   })()
 

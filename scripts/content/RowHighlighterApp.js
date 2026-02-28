@@ -16,6 +16,7 @@ class RowHighlighterApp {
     this.backgroundColor = '#0e65eb'
     this.opacity = '0.1'
     this.lineSize = 3.25
+    this.cellOpacity = 0.05
     this.isRowEnabled = true
     this.isColEnabled = false
     /** Inset (px): offset from grid line; 0 = tâm line trùng line xanh dương (cần cho line dày 4.25) */
@@ -46,8 +47,24 @@ class RowHighlighterApp {
     // Tâm line trùng line xanh dương; dày đều về 2 phía (cả 4 line: trên, dưới, trái, phải)
     const halfLine = this.lineSize / 2
 
-    /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string}>} */
+    /** @type {Array<{isRow?: boolean, isCellFill?: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
+
+    const activeCellRect = this.locator.getActiveCellRect?.() ?? null
+
+    if (
+      activeCellRect &&
+      this.cellOpacity > 0 &&
+      (this.isRowEnabled || this.isColEnabled)
+    ) {
+      highlightTaskList.push({
+        isCellFill: true,
+        left: `${activeCellRect.x}px`,
+        top: `${activeCellRect.y}px`,
+        width: `${activeCellRect.width}px`,
+        height: `${activeCellRect.height}px`,
+      })
+    }
 
     const insL = this.lineInsetLeft
     const insR = this.lineInsetRight
@@ -58,27 +75,53 @@ class RowHighlighterApp {
     const oHB = this.offsetHenryBottom
     const oHR = this.offsetHenryRight
 
-    highlightTaskList = (
-      this.isRowEnabled
-        ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
-            isRow: true,
-            left: `${insL + oHL}px`,
-            top: `${y - halfLine + oHT}px`,
-            width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
-            height: `${height - insB + this.lineSize + oHB - oHT}px`,
-          }))
-        : []
-    ).concat(
-      this.isColEnabled
-        ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
-            isRow: false,
-            left: `${x + insL - halfLine + oHL}px`,
-            top: `${insT + oHT}px`,
-            width: `${width - insL - insR + this.lineSize + oHR - oHL}px`,
-            height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
-          }))
-        : []
-    )
+    const lineTasks =
+      activeCellRect != null
+        ? [
+            ...(this.isRowEnabled
+              ? [
+                  {
+                    isRow: true,
+                    left: `${insL + oHL}px`,
+                    top: `${activeCellRect.y - halfLine + oHT}px`,
+                    width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
+                    height: `${activeCellRect.height - insB + this.lineSize + oHB - oHT}px`,
+                  },
+                ]
+              : []),
+            ...(this.isColEnabled
+              ? [
+                  {
+                    isRow: false,
+                    left: `${activeCellRect.x + insL - halfLine + oHL}px`,
+                    top: `${insT + oHT}px`,
+                    width: `${activeCellRect.width - insL - insR + this.lineSize + oHR - oHL}px`,
+                    height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
+                  },
+                ]
+              : []),
+          ]
+        : (this.isRowEnabled
+            ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
+                isRow: true,
+                left: `${insL + oHL}px`,
+                top: `${y - halfLine + oHT}px`,
+                width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
+                height: `${height - insB + this.lineSize + oHB - oHT}px`,
+              }))
+            : []
+          ).concat(
+            this.isColEnabled
+              ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
+                  isRow: false,
+                  left: `${x + insL - halfLine + oHL}px`,
+                  top: `${insT + oHT}px`,
+                  width: `${width - insL - insR + this.lineSize + oHR - oHL}px`,
+                  height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
+                }))
+              : []
+          )
+    highlightTaskList = highlightTaskList.concat(lineTasks)
 
     const diff = highlightTaskList.length - this.elementPool.length
 
@@ -98,7 +141,21 @@ class RowHighlighterApp {
 
     highlightTaskList.forEach((task, index) => {
       const element = this.elementPool[index]
-      const { isRow, ...box } = task
+      const { isRow, isCellFill, ...box } = task
+
+      if (isCellFill) {
+        Object.assign(element.style, {
+          position: 'absolute',
+          pointerEvents: 'none',
+          display: 'block',
+          boxSizing: 'border-box',
+          backgroundColor: this.backgroundColor,
+          opacity: String(this.cellOpacity),
+          border: 'none',
+          ...box,
+        })
+        return
+      }
 
       const border =
         isRow === true

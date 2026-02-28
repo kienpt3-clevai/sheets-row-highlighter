@@ -2,6 +2,9 @@
 /// <reference path="./SheetsActiveCellLocator.js" />
 /// <reference path="./RowHighlighterApp.js" />
 
+/** @type {any} */
+const chrome = (/** @type {{ chrome?: any }} */ (globalThis)).chrome
+
 const appContainer = document.createElement('div')
 appContainer.id = 'rh-app-container'
 document.body.appendChild(appContainer)
@@ -18,7 +21,9 @@ window.addEventListener('resize', updateHighlight)
 window.addEventListener('scroll', updateHighlight, true)
 
 // Phím tắt zoom: Ctrl+, thu nhỏ, Ctrl+. phóng to (chỉ frame chính)
-if (window === window.top && typeof window.__SheetsZoom !== 'undefined') {
+const win = /** @type {Window & { __SheetsZoom?: { zoomIn: (d: Document) => void; zoomOut: (d: Document) => void } }} */ (window)
+const sheetsZoom = win.__SheetsZoom
+if (win === window.top && sheetsZoom) {
   document.addEventListener(
     'keydown',
     (e) => {
@@ -26,18 +31,17 @@ if (window === window.top && typeof window.__SheetsZoom !== 'undefined') {
       if (e.key === ',') {
         e.preventDefault()
         e.stopPropagation()
-        window.__SheetsZoom.zoomOut(document)
+        sheetsZoom.zoomOut(document)
       } else if (e.key === '.') {
         e.preventDefault()
         e.stopPropagation()
-        window.__SheetsZoom.zoomIn(document)
+        sheetsZoom.zoomIn(document)
       }
     },
     true
   )
 }
 
-// @ts-ignore
 const storage = chrome.storage
 
 const loadSettings = () => {
@@ -75,6 +79,7 @@ const loadSettings = () => {
     app.isRowEnabled = current.row ?? app.isRowEnabled
     app.isColEnabled = current.column ?? app.isColEnabled
     app.lineSize = current.lineSize ?? app.lineSize
+    app.cellOpacity = current.cellOpacity ?? app.cellOpacity
 
     updateHighlight()
   })
@@ -84,7 +89,6 @@ loadSettings()
 storage.onChanged.addListener(loadSettings)
 
 // Cập nhật khi popup/background gửi message; trả sheetKey khi được hỏi
-// @ts-ignore
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'applyCommand') {
     app.isRowEnabled = message.row ?? app.isRowEnabled
@@ -113,6 +117,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       app.isRowEnabled = current.row ?? app.isRowEnabled
       app.isColEnabled = current.column ?? app.isColEnabled
       app.lineSize = current.lineSize ?? app.lineSize
+      app.cellOpacity = current.cellOpacity ?? app.cellOpacity
 
       updateHighlight()
     } else {

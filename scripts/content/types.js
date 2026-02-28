@@ -7,6 +7,7 @@ const DEFAULTS = {
   DEFAULT_COLOR: '#c2185b',
   DEFAULT_OPACITY: '0.8',
   DEFAULT_LINE_SIZE: 3.25,
+  DEFAULT_CELL_OPACITY: 0.05,
 }
 const g = typeof window !== 'undefined' ? window : globalThis
 Object.assign(g, DEFAULTS)
@@ -24,4 +25,5 @@ Object.assign(g, DEFAULTS)
  * @property {() => Array<HighlightRect>} getHighlightRectList
  * @property {() => Partial<CSSStyleDeclaration>} getSheetContainerStyle
  * @property {() => string} getSheetKey
+ * @property {() => HighlightRect | null} [getActiveCellRect]
  */

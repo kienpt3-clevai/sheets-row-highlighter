@@ -35,7 +35,7 @@ body {
 .popup-grid {
   display: grid;
   grid-template-columns: auto auto;
-  column-gap: 6px;
+  column-gap: 14px;
   row-gap: 0;
   justify-content: center;
   align-items: start;
@@ -68,6 +68,7 @@ body {
 
 .popup-col-left .popup-cell {
   justify-content: flex-start;
+  gap: 2px;
 }
 
 .popup-col-right .popup-cell {
@@ -98,7 +99,7 @@ body {
 
 .popup-label {
   flex-shrink: 0;
-  min-width: 28px;
+  min-width: 90px;
   font-size: 0.875rem;
   color: #5f6368;
 }
@@ -165,4 +166,17 @@ body {
 
 .huebee__close-button {
   display: none;
+}
+
+/* Thinner border and smaller shadow for color picker popup */
+.huebee__container {
+  box-shadow: 0 1px 4px hsla(0, 0%, 0%, 0.15);
+  border: 1px solid #ddd;
+}
+
+/* Larger color swatches (gridSize derived from cursor: 2x size => 4x area) */
+.huebee__cursor {
+  width: 30px;
+  height: 30px;
+  border: 1px solid white;
 }

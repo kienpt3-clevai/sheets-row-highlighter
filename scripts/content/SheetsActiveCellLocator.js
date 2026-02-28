@@ -119,6 +119,8 @@ class SheetsActiveCellLocator {
 
   /**
    * Kiểm tra nhiều rect gộp lại có phải full hàng hoặc full cột không.
+   * Khi có cột/hàng ẩn, so sánh theo span có thể nhỏ hơn sheet; nên thêm điều kiện
+   * "chạm hai cạnh" (trái-phải cho full hàng, trên-dưới cho full cột).
    * @param {Array<HighlightRect>} rectList
    * @param {DOMRect} sheetRect
    * @param {number} tolerance
@@ -131,14 +133,20 @@ class SheetsActiveCellLocator {
     for (const group of rowGroups) {
       const left = Math.min(...group.map((r) => r.x))
       const right = Math.max(...group.map((r) => r.x + r.width))
-      if (right - left >= sheetRect.width - tolerance) return true
+      const spansFullWidth =
+        right - left >= sheetRect.width - tolerance ||
+        (left <= tolerance && right >= sheetRect.width - tolerance)
+      if (spansFullWidth) return true
     }
 
     const colGroups = this._groupRectsByColumn(rectList, tolerance)
     for (const group of colGroups) {
       const top = Math.min(...group.map((r) => r.y))
       const bottom = Math.max(...group.map((r) => r.y + r.height))
-      if (bottom - top >= sheetRect.height - tolerance) return true
+      const spansFullHeight =
+        bottom - top >= sheetRect.height - tolerance ||
+        (top <= tolerance && bottom >= sheetRect.height - tolerance)
+      if (spansFullHeight) return true
     }
 
     return false
@@ -204,7 +212,20 @@ class SheetsActiveCellLocator {
   /** @returns {Array<HighlightRect>} */
   _getSingleHighlightRectList() {
     const rect = this.getActiveCellRect()
-    return rect ? [rect] : []
+    if (!rect) return []
+    const sheetRect = this._getSheetContainerRect()
+    if (!sheetRect) return [rect]
+    const tolerance = 2
+    const right = rect.x + rect.width
+    const bottom = rect.y + rect.height
+    const fullRow =
+      rect.width >= sheetRect.width - tolerance ||
+      (rect.x <= tolerance && right >= sheetRect.width - tolerance)
+    const fullCol =
+      rect.height >= sheetRect.height - tolerance ||
+      (rect.y <= tolerance && bottom >= sheetRect.height - tolerance)
+    if (fullRow || fullCol) return []
+    return [rect]
   }
 
   _getSheetContainerRect() {
