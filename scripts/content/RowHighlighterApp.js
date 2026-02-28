@@ -18,6 +18,10 @@ class RowHighlighterApp {
     this.lineSize = 2
     this.isRowEnabled = true
     this.isColEnabled = false
+    /** Inset (px): line position offset from cell boundaries */
+    this.lineInsetLeftRight = 1
+    this.lineInsetTop = 3
+    this.lineInsetBottom = 2
   }
 
   update() {
@@ -38,24 +42,29 @@ class RowHighlighterApp {
     /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
 
+    const insL = this.lineInsetLeftRight
+    const insR = this.lineInsetLeftRight
+    const insT = this.lineInsetTop
+    const insB = this.lineInsetBottom
+
     highlightTaskList = (
       this.isRowEnabled
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
             isRow: true,
-            left: '0px',
-            top: `${Math.max(0, y - alignOffset)}px`,
-            width: '100%',
-            height: `${Math.max(0, height)}px`,
+            left: `${insL}px`,
+            top: `${Math.max(0, y - alignOffset + insT)}px`,
+            width: `calc(100% - ${insL + insR}px)`,
+            height: `${Math.max(0, height - insT - insB)}px`,
           }))
         : []
     ).concat(
       this.isColEnabled
         ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
             isRow: false,
-            left: `${Math.max(0, x - halfOffset)}px`,
-            top: '0px',
-            width: `${Math.max(0, width - alignOffset)}px`,
-            height: '100%',
+            left: `${Math.max(0, x - halfOffset + insL)}px`,
+            top: `${insT}px`,
+            width: `${Math.max(0, width - alignOffset - insL - insR)}px`,
+            height: `calc(100% - ${insT + insB}px)`,
           }))
         : []
     )
