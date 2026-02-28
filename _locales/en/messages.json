@@ -1,6 +1,6 @@
 {
   "extensionDescription": {
-    "message": "Highlight a row (and column) of current cell in Google Sheets and Microsoft Excel Online.",
+    "message": "Highlight the row and column of the current cell in Google Sheets.",
     "description": "Description of the extension."
   },
   "toggleRowDescription": {

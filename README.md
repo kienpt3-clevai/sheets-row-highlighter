@@ -1,4 +1,4 @@
-# Sheets Row Highlighter
+# Google Sheets Highlight
 
 Tiện ích mở rộng trình duyệt: highlight hàng (cột) ô hiện tại trên Google Sheets.
 

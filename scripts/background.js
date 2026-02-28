@@ -1,4 +1,4 @@
-importScripts('scripts/content/types.js')
+importScripts('content/types.js')
 
 chrome.commands.onCommand.addListener((command) => {
   chrome.storage.local.get(['row', 'column'], (items) => {
