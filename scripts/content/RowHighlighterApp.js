@@ -15,13 +15,14 @@ class RowHighlighterApp {
 
     this.backgroundColor = '#0e65eb'
     this.opacity = '0.1'
-    this.lineSize = 2
+    this.lineSize = 3.25
     this.isRowEnabled = true
     this.isColEnabled = false
     /** Inset (px): line position offset from cell boundaries */
-    this.lineInsetLeftRight = 1
-    this.lineInsetTop = 3
-    this.lineInsetBottom = 2
+    this.lineInsetLeft = 1
+    this.lineInsetRight = 0.5
+    this.lineInsetTop = 0
+    this.lineInsetBottom = 1.5
   }
 
   update() {
@@ -42,8 +43,8 @@ class RowHighlighterApp {
     /** @type {Array<{isRow: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
 
-    const insL = this.lineInsetLeftRight
-    const insR = this.lineInsetLeftRight
+    const insL = this.lineInsetLeft
+    const insR = this.lineInsetRight
     const insT = this.lineInsetTop
     const insB = this.lineInsetBottom
 
@@ -52,9 +53,9 @@ class RowHighlighterApp {
         ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
             isRow: true,
             left: `${insL}px`,
-            top: `${Math.max(0, y - alignOffset + insT)}px`,
+            top: `${Math.max(0, y)}px`,
             width: `calc(100% - ${insL + insR}px)`,
-            height: `${Math.max(0, height - insT - insB)}px`,
+            height: `${Math.max(0, height - insB)}px`,
           }))
         : []
     ).concat(

@@ -18,7 +18,7 @@ window.addEventListener('load', () => {
   const defaultOpacity = '0.8'
   const defaultRow = true
   const defaultColumn = true
-  const defaultLineSize = 1.75
+  const defaultLineSize = 3.25
 
   const customColors = [
     '#0e65eb',
