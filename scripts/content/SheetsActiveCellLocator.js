@@ -82,6 +82,7 @@ class SheetsActiveCellLocator {
     }
 
     const tolerance = 2
+    const edgeTolerance = 80
 
     /** @type {Array<HighlightRect>} */
     const activeSelectionRectList = activeSelectionList.map((element) => {
@@ -95,7 +96,7 @@ class SheetsActiveCellLocator {
     })
 
     // Nhiều rect ghép lại thành full hàng/cột thì không vẽ
-    if (this._isFullRowOrColumnSelection(activeSelectionRectList, sheetRect, tolerance)) {
+    if (this._isFullRowOrColumnSelection(activeSelectionRectList, sheetRect, tolerance, edgeTolerance)) {
       return []
     }
 
@@ -119,23 +120,35 @@ class SheetsActiveCellLocator {
 
   /**
    * Kiểm tra nhiều rect gộp lại có phải full hàng hoặc full cột không.
-   * Khi có cột/hàng ẩn, so sánh theo span có thể nhỏ hơn sheet; nên thêm điều kiện
-   * "chạm hai cạnh" (trái-phải cho full hàng, trên-dưới cho full cột).
+   * Full row = (1) vùng chọn bắt đầu sát cạnh trái (contentLeft <= edgeTol) và có hàng trải hết, HOẶC
+   *           (2) vùng chọn trải đủ chiều rộng container (selection width >= sheetWidth - edgeTol) và có hàng trải hết — cho sheet ít cột có row header.
    * @param {Array<HighlightRect>} rectList
    * @param {DOMRect} sheetRect
    * @param {number} tolerance
+   * @param {number} [edgeTolerance]
    * @returns {boolean}
    */
-  _isFullRowOrColumnSelection(rectList, sheetRect, tolerance) {
+  _isFullRowOrColumnSelection(rectList, sheetRect, tolerance, edgeTolerance = 80) {
     if (rectList.length === 0) return false
+
+    const contentLeft = Math.min(...rectList.map((r) => r.x))
+    const contentRight = Math.max(...rectList.map((r) => r.x + r.width))
+    const contentTop = Math.min(...rectList.map((r) => r.y))
+    const contentBottom = Math.max(...rectList.map((r) => r.y + r.height))
+    const selectionWidth = contentRight - contentLeft
+    const selectionHeight = contentBottom - contentTop
+    const sheetWidth = sheetRect.width
+    const sheetHeight = sheetRect.height
 
     const rowGroups = this._groupRectsByRow(rectList, tolerance)
     for (const group of rowGroups) {
       const left = Math.min(...group.map((r) => r.x))
       const right = Math.max(...group.map((r) => r.x + r.width))
+      const groupSpansSelection = left <= contentLeft + tolerance && right >= contentRight - tolerance
+      const startsAtLeft = contentLeft <= edgeTolerance
+      const spansSheetWidth = selectionWidth >= sheetWidth - edgeTolerance
       const spansFullWidth =
-        right - left >= sheetRect.width - tolerance ||
-        (left <= tolerance && right >= sheetRect.width - tolerance)
+        groupSpansSelection && (startsAtLeft || spansSheetWidth)
       if (spansFullWidth) return true
     }
 
@@ -143,9 +156,11 @@ class SheetsActiveCellLocator {
     for (const group of colGroups) {
       const top = Math.min(...group.map((r) => r.y))
       const bottom = Math.max(...group.map((r) => r.y + r.height))
+      const groupSpansSelection = top <= contentTop + tolerance && bottom >= contentBottom - tolerance
+      const startsAtTop = contentTop <= edgeTolerance
+      const spansSheetHeight = selectionHeight >= sheetHeight - edgeTolerance
       const spansFullHeight =
-        bottom - top >= sheetRect.height - tolerance ||
-        (top <= tolerance && bottom >= sheetRect.height - tolerance)
+        groupSpansSelection && (startsAtTop || spansSheetHeight)
       if (spansFullHeight) return true
     }
 
@@ -215,15 +230,13 @@ class SheetsActiveCellLocator {
     if (!rect) return []
     const sheetRect = this._getSheetContainerRect()
     if (!sheetRect) return [rect]
-    const tolerance = 2
-    const right = rect.x + rect.width
-    const bottom = rect.y + rect.height
+    const edgeTolerance = 80
+    const minRowWidth = 120
+    const minColHeight = 24
     const fullRow =
-      rect.width >= sheetRect.width - tolerance ||
-      (rect.x <= tolerance && right >= sheetRect.width - tolerance)
+      rect.x <= edgeTolerance && rect.width >= minRowWidth
     const fullCol =
-      rect.height >= sheetRect.height - tolerance ||
-      (rect.y <= tolerance && bottom >= sheetRect.height - tolerance)
+      rect.y <= edgeTolerance && rect.height >= minColHeight
     if (fullRow || fullCol) return []
     return [rect]
   }
@@ -232,6 +245,22 @@ class SheetsActiveCellLocator {
     return document
       .getElementById(this._sheetContainerId)
       ?.getBoundingClientRect()
+  }
+
+  /**
+   * Vùng nội dung sheet (scrollWidth x scrollHeight) để kiểm tra full row/column.
+   * Kết hợp với heuristic "chạm cạnh trái + span max" khi sheet ít cột (scrollWidth = clientWidth).
+   * @returns {{ left: number, top: number, right: number, bottom: number } | null}
+   */
+  _getVisibleSheetBounds() {
+    const el = document.getElementById(this._sheetContainerId)
+    if (!el) return null
+    return {
+      left: 0,
+      top: 0,
+      right: el.scrollWidth,
+      bottom: el.scrollHeight,
+    }
   }
 
   getSheetContainerStyle() {

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Google Sheets Highlight 1.2.0</title>
+    <title>Google Sheets Highlight 1.3.0</title>
     <link rel="stylesheet" href="../libraries/huebee@2.1.0/huebee.css" />
     <link rel="stylesheet" href="../styles/popup.css" />
     <script src="../libraries/huebee@2.1.0/huebee.pkgd.js"></script>
@@ -11,46 +11,74 @@
   </head>
   <body>
     <div class="popup">
-      <h1 class="popup-title">Google Sheets Highlight 1.2.0</h1>
+      <h1 class="popup-title">Google Sheets Highlight 1.3.0</h1>
       <form class="popup-form">
-        <div class="popup-grid">
-          <div class="popup-col popup-col-left">
-            <div class="popup-cell">
-              <label class="popup-label" for="color">Color Picker</label>
-              <input class="popup-input" id="color" />
-            </div>
-            <div class="popup-cell">
-              <label class="popup-label" for="opacity">Line Opacity</label>
-              <input type="number" class="popup-input" id="opacity" min="0.1" max="1" step="0.1" />
-            </div>
-            <div class="popup-cell">
-              <label class="popup-label" for="lineSize">Line Size</label>
-              <input type="number" class="popup-input" id="lineSize" min="0.5" max="5" step="0.25" />
-            </div>
-            <div class="popup-cell">
-              <label class="popup-label" for="cellOpacity">Cell Opacity</label>
-              <input type="number" class="popup-input" id="cellOpacity" min="0" max="0.5" step="0.05" />
-            </div>
+        <div class="popup-grid popup-grid-3">
+          <!-- Row 1: Line Opacity | Line Row | color Line Row -->
+          <div class="popup-cell popup-cell-c1">
+            <label class="popup-label" for="opacity">Line Opa</label>
+            <input type="number" class="popup-input" id="opacity" min="0.1" max="1" step="0.1" />
           </div>
-          <div class="popup-col popup-col-right">
-            <div class="popup-cell popup-cell-buttons">
-              <button type="button" class="popup-btn popup-btn-nav" id="prevColor" title="Previous color">◀</button>
-              <button type="button" class="popup-btn popup-btn-nav" id="nextColor" title="Next color">▶</button>
-            </div>
-            <div class="popup-cell popup-cell-rowcol">
-              <span class="popup-cell-group">
-                <label class="popup-label" for="row">Row</label>
-                <input type="checkbox" class="popup-checkbox" id="row" />
-              </span>
-              <span class="popup-cell-group">
-                <label class="popup-label" for="column">Col</label>
-                <input type="checkbox" class="popup-checkbox" id="column" />
-              </span>
-            </div>
-            <div class="popup-cell popup-cell-reset">
-              <input class="popup-btn popup-btn-reset" id="reset" type="button" value="Reset" />
-            </div>
-            <div class="popup-cell"></div>
+          <div class="popup-cell popup-cell-c2">
+            <label class="popup-label" for="row">Line Row</label>
+            <input type="checkbox" class="popup-checkbox" id="row" />
+          </div>
+          <div class="popup-cell popup-cell-c3 popup-cell-color">
+            <input class="popup-input popup-input-color" id="rowLineColor" />
+            <button type="button" class="popup-btn popup-btn-nav" id="prevRowLineColor" title="Previous color">◀</button>
+            <button type="button" class="popup-btn popup-btn-nav" id="nextRowLineColor" title="Next color">▶</button>
+          </div>
+          <!-- Row 2: Line Size | Line Col | color Line Col -->
+          <div class="popup-cell popup-cell-c1">
+            <label class="popup-label" for="lineSize">Line Size</label>
+            <input type="number" class="popup-input" id="lineSize" min="0.5" max="5" step="0.25" />
+          </div>
+          <div class="popup-cell popup-cell-c2">
+            <label class="popup-label" for="column">Line Col</label>
+            <input type="checkbox" class="popup-checkbox" id="column" />
+          </div>
+          <div class="popup-cell popup-cell-c3 popup-cell-color">
+            <input class="popup-input popup-input-color" id="colLineColor" />
+            <button type="button" class="popup-btn popup-btn-nav" id="prevColLineColor" title="Previous color">◀</button>
+            <button type="button" class="popup-btn popup-btn-nav" id="nextColLineColor" title="Next color">▶</button>
+          </div>
+          <!-- Row 3: Row Opa | Fill Row | color Fill Row -->
+          <div class="popup-cell popup-cell-c1">
+            <label class="popup-label" for="rowOpacity">Row Opa</label>
+            <input type="number" class="popup-input" id="rowOpacity" min="0" max="0.5" step="0.05" />
+          </div>
+          <div class="popup-cell popup-cell-c2">
+            <label class="popup-label" for="fillRow">Fill Row</label>
+            <input type="checkbox" class="popup-checkbox" id="fillRow" />
+          </div>
+          <div class="popup-cell popup-cell-c3 popup-cell-color">
+            <input class="popup-input popup-input-color" id="rowFillColor" />
+            <button type="button" class="popup-btn popup-btn-nav" id="prevRowFillColor" title="Previous color">◀</button>
+            <button type="button" class="popup-btn popup-btn-nav" id="nextRowFillColor" title="Next color">▶</button>
+          </div>
+          <!-- Row 4: Col Opa | Fill Col | color Fill Col -->
+          <div class="popup-cell popup-cell-c1">
+            <label class="popup-label" for="colOpacity">Col Opa</label>
+            <input type="number" class="popup-input" id="colOpacity" min="0" max="0.5" step="0.05" />
+          </div>
+          <div class="popup-cell popup-cell-c2">
+            <label class="popup-label" for="fillCol">Fill Col</label>
+            <input type="checkbox" class="popup-checkbox" id="fillCol" />
+          </div>
+          <div class="popup-cell popup-cell-c3 popup-cell-color">
+            <input class="popup-input popup-input-color" id="colFillColor" />
+            <button type="button" class="popup-btn popup-btn-nav" id="prevColFillColor" title="Previous color">◀</button>
+            <button type="button" class="popup-btn popup-btn-nav" id="nextColFillColor" title="Next color">▶</button>
+          </div>
+          <!-- Row 5: Reset | Set Default | Set Default All (căn giữa cả 3 cột) -->
+          <div class="popup-cell popup-cell-c1 popup-cell-row5">
+            <input class="popup-btn popup-btn-reset" id="reset" type="button" value="Reset" />
+          </div>
+          <div class="popup-cell popup-cell-c2 popup-cell-row5">
+            <input class="popup-btn popup-btn-default" id="setDefault" type="button" value="Set Default" />
+          </div>
+          <div class="popup-cell popup-cell-c3 popup-cell-row5">
+            <input class="popup-btn popup-btn-default-all" id="setDefaultAll" type="button" value="Set Default All" />
           </div>
         </div>
       </form>

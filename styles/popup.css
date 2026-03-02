@@ -8,16 +8,20 @@ body {
   padding: 0;
   background: #e3f2fd;
   color: #202124;
-  min-width: 260px;
+  min-width: 460px;
+  width: max-content;
   box-sizing: border-box;
   overflow: visible;
 }
 
 .popup {
-  padding: 12px 12px;
+  padding: 12px 16px;
   background: #e3f2fd;
   border: 2px solid #1565c0;
   overflow: visible;
+  min-width: 460px;
+  width: max-content;
+  box-sizing: border-box;
 }
 
 .popup-title {
@@ -32,85 +36,86 @@ body {
   display: block;
 }
 
-.popup-grid {
+/* 3 cột: cột 1 (số + Reset), cột 2 (checkbox + Set Default), cột 3 (color picker + prev/next) */
+.popup-grid-3 {
   display: grid;
-  grid-template-columns: auto auto;
-  column-gap: 14px;
-  row-gap: 0;
-  justify-content: center;
-  align-items: start;
-}
-
-.popup-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.popup-col-left {
-  justify-content: start;
-  min-width: 0;
-}
-
-.popup-col-right {
-  align-items: stretch;
-  width: auto;
-  min-width: auto;
-  flex-shrink: 0;
+  grid-template-columns: 120px 110px 200px;
+  column-gap: 12px;
+  row-gap: 6px;
+  align-items: center;
+  width: 100%;
+  min-width: 420px;
+  box-sizing: border-box;
 }
 
 .popup-cell {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   min-height: 26px;
 }
 
-.popup-col-left .popup-cell {
+.popup-cell-c1 {
   justify-content: flex-start;
+}
+
+/* Cột 2: tăng khoảng cách từ cột 1 (margin-left), giảm khoảng cách giữa nhãn và checkbox (gap) */
+.popup-cell-c2 {
+  justify-content: flex-start;
+  margin-left: 16px;
   gap: 2px;
 }
 
-.popup-col-right .popup-cell {
-  justify-content: flex-end;
+.popup-cell-c2 .popup-label {
+  width: 64px;
+  min-width: 64px;
 }
 
-.popup-col-right .popup-cell-buttons {
-  justify-content: space-evenly;
-}
-
-.popup-col-right .popup-cell-rowcol {
+.popup-cell-c3 {
   justify-content: flex-start;
 }
 
-.popup-col-right .popup-cell-rowcol .popup-cell-group:last-child {
-  margin-left: auto;
+/* Dòng 5: cả 3 nút căn giữa theo từng cột */
+.popup-cell-row5 {
+  justify-content: center;
 }
 
-.popup-cell-group {
+.popup-cell-color {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
 }
 
-.popup-col-right .popup-cell-reset {
-  justify-content: center;
+.popup-cell-color .popup-input-color {
+  width: 72px;
+  min-width: 72px;
+  cursor: pointer;
+}
+
+.popup-btn-reset {
+  min-width: 80px;
+}
+
+.popup-btn-default {
+  min-width: 90px;
+}
+
+.popup-btn-default-all {
+  min-width: 100px;
+  font-size: 0.75rem;
 }
 
 .popup-label {
   flex-shrink: 0;
-  min-width: 90px;
+  width: 72px;
+  min-width: 72px;
   font-size: 0.875rem;
   color: #5f6368;
 }
 
-.popup-cell-rowcol .popup-label {
-  min-width: 18px;
-  text-align: right;
-}
-
 .popup-input {
-  width: 52px;
+  width: 56px;
+  min-width: 56px;
   padding: 4px 6px;
   border: 1px solid #90caf9;
   border-radius: 4px;
@@ -150,18 +155,16 @@ body {
   border: 1px solid #1565c0;
   border-radius: 4px;
   cursor: pointer;
+  padding: 4px 10px;
 }
 
 .popup-btn:hover {
   background: #bbdefb;
 }
 
-.popup-btn-reset {
-  display: block;
-  width: 100%;
-  padding: 4px 10px;
+.popup-btn-reset,
+.popup-btn-default {
   font-size: 0.8125rem;
-  box-sizing: border-box;
 }
 
 .huebee__close-button {

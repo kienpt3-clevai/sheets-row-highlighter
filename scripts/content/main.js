@@ -1,9 +1,7 @@
 // @ts-check
+/// <reference path="./global.d.ts" />
 /// <reference path="./SheetsActiveCellLocator.js" />
 /// <reference path="./RowHighlighterApp.js" />
-
-/** @type {any} */
-const chrome = (/** @type {{ chrome?: any }} */ (globalThis)).chrome
 
 const appContainer = document.createElement('div')
 appContainer.id = 'rh-app-container'
@@ -48,9 +46,11 @@ const loadSettings = () => {
   const sheetKey =
     typeof locator.getSheetKey === 'function' ? locator.getSheetKey() : 'default'
 
-  storage.local.get(['sheetSettings'], (/** @type {any} */ items) => {
+  storage.local.get(['sheetSettings', 'defaultSettings'], (/** @type {any} */ items) => {
     /** @type {Record<string, any>} */
     const allSettings = items.sheetSettings || {}
+    /** @type {Record<string, any>} */
+    const defaultSettings = items.defaultSettings || {}
 
     // Tự động xoá cấu hình cũ hơn 30 ngày
     const now = Date.now()
@@ -72,14 +72,27 @@ const loadSettings = () => {
       storage.local.set({ sheetSettings: pruned })
     }
 
-    const current = pruned[sheetKey] || {}
+    const current = pruned[sheetKey] ?? defaultSettings
 
-    app.backgroundColor = current.color ?? app.backgroundColor
+    const currentRowFillOpacity =
+      current.rowFillOpacity ?? current.cellOpacity ?? app.rowFillOpacity
+    const currentColFillOpacity =
+      current.colFillOpacity ?? current.cellOpacity ?? app.colFillOpacity
+
+    const baseColor = current.color ?? app.backgroundColor
+    app.backgroundColor = baseColor
+    app.rowLineColor = current.rowLineColor ?? baseColor
+    app.colLineColor = current.colLineColor ?? baseColor
+    app.rowFillColor = current.rowFillColor ?? baseColor
+    app.colFillColor = current.colFillColor ?? baseColor
     app.opacity = current.opacity ?? app.opacity
     app.isRowEnabled = current.row ?? app.isRowEnabled
     app.isColEnabled = current.column ?? app.isColEnabled
+    app.fillRowEnabled = current.fillRow ?? app.fillRowEnabled
+    app.fillColEnabled = current.fillCol ?? app.fillColEnabled
     app.lineSize = current.lineSize ?? app.lineSize
-    app.cellOpacity = current.cellOpacity ?? app.cellOpacity
+    app.rowFillOpacity = currentRowFillOpacity
+    app.colFillOpacity = currentColFillOpacity
 
     updateHighlight()
   })
@@ -112,12 +125,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'settingsUpdated') {
     if (message.settings && typeof message.settings === 'object') {
       const current = message.settings
-      app.backgroundColor = current.color ?? app.backgroundColor
+      const currentRowFillOpacity =
+        current.rowFillOpacity ?? current.cellOpacity ?? app.rowFillOpacity
+      const currentColFillOpacity =
+        current.colFillOpacity ?? current.cellOpacity ?? app.colFillOpacity
+      const baseColor = current.color ?? app.backgroundColor
+      app.backgroundColor = baseColor
+      app.rowLineColor = current.rowLineColor ?? baseColor
+      app.colLineColor = current.colLineColor ?? baseColor
+      app.rowFillColor = current.rowFillColor ?? baseColor
+      app.colFillColor = current.colFillColor ?? baseColor
       app.opacity = current.opacity ?? app.opacity
       app.isRowEnabled = current.row ?? app.isRowEnabled
       app.isColEnabled = current.column ?? app.isColEnabled
+      app.fillRowEnabled = current.fillRow ?? app.fillRowEnabled
+      app.fillColEnabled = current.fillCol ?? app.fillColEnabled
       app.lineSize = current.lineSize ?? app.lineSize
-      app.cellOpacity = current.cellOpacity ?? app.cellOpacity
+      app.rowFillOpacity = currentRowFillOpacity
+      app.colFillOpacity = currentColFillOpacity
 
       updateHighlight()
     } else {

@@ -14,11 +14,19 @@ class RowHighlighterApp {
     this.elementPool = []
 
     this.backgroundColor = '#0e65eb'
+    this.rowLineColor = this.backgroundColor
+    this.colLineColor = this.backgroundColor
+    this.rowFillColor = this.backgroundColor
+    this.colFillColor = this.backgroundColor
     this.opacity = '0.1'
     this.lineSize = 3.25
-    this.cellOpacity = 0.05
+    // Opacity fill riêng cho row/col (popup: Row Opacity / Col Opacity)
+    this.rowFillOpacity = 0.05
+    this.colFillOpacity = 0.05
     this.isRowEnabled = true
     this.isColEnabled = false
+    this.fillRowEnabled = true
+    this.fillColEnabled = true
     /** Inset (px): offset from grid line; 0 = tâm line trùng line xanh dương (cần cho line dày 4.25) */
     this.lineInsetLeft = 0
     this.lineInsetRight = 0
@@ -42,29 +50,12 @@ class RowHighlighterApp {
     })
 
     const borderWidth = `${this.lineSize}px`
-    const borderStyle = `solid ${this.backgroundColor}`
 
     // Tâm line trùng line xanh dương; dày đều về 2 phía (cả 4 line: trên, dưới, trái, phải)
     const halfLine = this.lineSize / 2
 
     /** @type {Array<{isRow?: boolean, isCellFill?: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
-
-    const activeCellRect = this.locator.getActiveCellRect?.() ?? null
-
-    if (
-      activeCellRect &&
-      this.cellOpacity > 0 &&
-      (this.isRowEnabled || this.isColEnabled)
-    ) {
-      highlightTaskList.push({
-        isCellFill: true,
-        left: `${activeCellRect.x}px`,
-        top: `${activeCellRect.y}px`,
-        width: `${activeCellRect.width}px`,
-        height: `${activeCellRect.height}px`,
-      })
-    }
 
     const insL = this.lineInsetLeft
     const insR = this.lineInsetRight
@@ -75,52 +66,50 @@ class RowHighlighterApp {
     const oHB = this.offsetHenryBottom
     const oHR = this.offsetHenryRight
 
-    const lineTasks =
-      activeCellRect != null
-        ? [
-            ...(this.isRowEnabled
-              ? [
-                  {
-                    isRow: true,
-                    left: `${insL + oHL}px`,
-                    top: `${activeCellRect.y - halfLine + oHT}px`,
-                    width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
-                    height: `${activeCellRect.height - insB + this.lineSize + oHB - oHT}px`,
-                  },
-                ]
-              : []),
-            ...(this.isColEnabled
-              ? [
-                  {
-                    isRow: false,
-                    left: `${activeCellRect.x + insL - halfLine + oHL}px`,
-                    top: `${insT + oHT}px`,
-                    width: `${activeCellRect.width - insL - insR + this.lineSize + oHR - oHL}px`,
-                    height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
-                  },
-                ]
-              : []),
-          ]
-        : (this.isRowEnabled
-            ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
-                isRow: true,
-                left: `${insL + oHL}px`,
-                top: `${y - halfLine + oHT}px`,
-                width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
-                height: `${height - insB + this.lineSize + oHB - oHT}px`,
-              }))
-            : []
-          ).concat(
-            this.isColEnabled
-              ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
-                  isRow: false,
-                  left: `${x + insL - halfLine + oHL}px`,
-                  top: `${insT + oHT}px`,
-                  width: `${width - insL - insR + this.lineSize + oHR - oHL}px`,
-                  height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
-                }))
-              : []
-          )
+    const rowBands = this.isRowEnabled
+      ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
+          left: `${insL + oHL}px`,
+          top: `${y - halfLine + oHT}px`,
+          width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
+          height: `${height - insB + this.lineSize + oHB - oHT}px`,
+        }))
+      : []
+    const colBands = this.isColEnabled
+      ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
+          left: `${x + insL - halfLine + oHL}px`,
+          top: `${insT + oHT}px`,
+          width: `${width - insL - insR + this.lineSize + oHR - oHL}px`,
+          height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
+        }))
+      : []
+
+    if (rectList.length > 0) {
+      if (this.fillRowEnabled && this.rowFillOpacity > 0) {
+        for (const box of rowBands) {
+          highlightTaskList.push({
+            isCellFill: true,
+            isRow: true,
+            fillOpacity: this.rowFillOpacity,
+            ...box,
+          })
+        }
+      }
+      if (this.fillColEnabled && this.colFillOpacity > 0) {
+        for (const box of colBands) {
+          highlightTaskList.push({
+            isCellFill: true,
+            isRow: false,
+            fillOpacity: this.colFillOpacity,
+            ...box,
+          })
+        }
+      }
+    }
+
+    const lineTasks = [
+      ...rowBands.map((box) => ({ ...box, isRow: true })),
+      ...colBands.map((box) => ({ ...box, isRow: false })),
+    ]
     highlightTaskList = highlightTaskList.concat(lineTasks)
 
     const diff = highlightTaskList.length - this.elementPool.length
@@ -141,22 +130,27 @@ class RowHighlighterApp {
 
     highlightTaskList.forEach((task, index) => {
       const element = this.elementPool[index]
-      const { isRow, isCellFill, ...box } = task
+      const { isRow, isCellFill, fillOpacity, ...box } = task
 
       if (isCellFill) {
+        const fillColor = isRow === true ? this.rowFillColor : this.colFillColor
         Object.assign(element.style, {
           position: 'absolute',
           pointerEvents: 'none',
           display: 'block',
           boxSizing: 'border-box',
-          backgroundColor: this.backgroundColor,
-          opacity: String(this.cellOpacity),
+          backgroundColor: fillColor,
+          opacity: String(
+            typeof fillOpacity === 'number' ? fillOpacity : 0
+          ),
           border: 'none',
           ...box,
         })
         return
       }
 
+      const lineColor = isRow === true ? this.rowLineColor : this.colLineColor
+      const borderStyle = `solid ${lineColor}`
       const border =
         isRow === true
           ? {

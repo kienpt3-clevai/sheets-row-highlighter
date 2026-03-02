@@ -12,15 +12,33 @@ window.addEventListener('load', () => {
   const rowInput = document.getElementById('row')
   const columnInput = document.getElementById('column')
   const lineSizeInput = document.getElementById('lineSize')
-  const cellOpacityInput = document.getElementById('cellOpacity')
+  const rowOpacityInput = document.getElementById('rowOpacity')
+  const colOpacityInput = document.getElementById('colOpacity')
+  const fillRowInput = document.getElementById('fillRow')
+  const fillColInput = document.getElementById('fillCol')
   const resetButton = document.getElementById('reset')
+  const setDefaultButton = document.getElementById('setDefault')
+  const setDefaultAllButton = document.getElementById('setDefaultAll')
 
   const defaultColor = typeof DEFAULT_COLOR !== 'undefined' ? DEFAULT_COLOR : '#c2185b'
   const defaultOpacity = typeof DEFAULT_OPACITY !== 'undefined' ? DEFAULT_OPACITY : '0.8'
   const defaultRow = typeof DEFAULT_ROW !== 'undefined' ? DEFAULT_ROW : true
   const defaultColumn = typeof DEFAULT_COLUMN !== 'undefined' ? DEFAULT_COLUMN : true
+  const defaultFillRow = typeof DEFAULT_FILL_ROW !== 'undefined' ? DEFAULT_FILL_ROW : true
+  const defaultFillCol = typeof DEFAULT_FILL_COL !== 'undefined' ? DEFAULT_FILL_COL : true
   const defaultLineSize = typeof DEFAULT_LINE_SIZE !== 'undefined' ? DEFAULT_LINE_SIZE : 3.25
-  const defaultCellOpacity = typeof DEFAULT_CELL_OPACITY !== 'undefined' ? DEFAULT_CELL_OPACITY : 0.05
+  const defaultRowFillOpacity =
+    typeof DEFAULT_ROW_FILL_OPACITY !== 'undefined' ? DEFAULT_ROW_FILL_OPACITY : 0.05
+  const defaultColFillOpacity =
+    typeof DEFAULT_COL_FILL_OPACITY !== 'undefined' ? DEFAULT_COL_FILL_OPACITY : 0.05
+  const defaultRowLineColor =
+    typeof DEFAULT_ROW_LINE_COLOR !== 'undefined' ? DEFAULT_ROW_LINE_COLOR : defaultColor
+  const defaultColLineColor =
+    typeof DEFAULT_COL_LINE_COLOR !== 'undefined' ? DEFAULT_COL_LINE_COLOR : defaultColor
+  const defaultRowFillColor =
+    typeof DEFAULT_ROW_FILL_COLOR !== 'undefined' ? DEFAULT_ROW_FILL_COLOR : defaultColor
+  const defaultColFillColor =
+    typeof DEFAULT_COL_FILL_COLOR !== 'undefined' ? DEFAULT_COL_FILL_COLOR : defaultColor
 
   const customColors = [
     '#0e65eb',
@@ -33,84 +51,26 @@ window.addEventListener('load', () => {
     '#ec930e',
   ].sort()
 
-  const hueb = new Huebee('#color', {
+  const huebeeOptions = {
     notation: 'hex',
     customColors,
     shades: 0,
     hues: 4,
-  })
-
-  // Lưu cấu hình
-  const save = async () => {
-    const color = hueb.color
-    const opacity = Math.min(
-      Math.max(parseFloat(opacityInput.value, 10) || 1, 0.1),
-      1
-    )
-    const row = rowInput.checked
-    const column = columnInput.checked
-    const lineSize = Math.min(
-      Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
-      5
-    )
-    const cellOpacity = Math.min(
-      Math.max(
-        Math.round((parseFloat(cellOpacityInput.value, 10) || defaultCellOpacity) * 20) / 20,
-        0
-      ),
-      0.5
-    )
-
-    // Hỏi content script để lấy sheetKey hiện tại
-    let sheetKey = 'default'
-    try {
-      const response = await sendMessageToActiveTab({ type: 'getSheetKey' })
-      if (response && typeof response.sheetKey === 'string') {
-        sheetKey = response.sheetKey
-      }
-    } catch {
-      // ignore, dùng key mặc định
-    }
-
-    chrome.storage.local.get(['sheetSettings'], (items) => {
-      const allSettings = items.sheetSettings || {}
-      const settings = {
-        color,
-        opacity,
-        row,
-        column,
-        lineSize,
-        cellOpacity,
-        updatedAt: Date.now(),
-      }
-      allSettings[sheetKey] = settings
-
-      chrome.storage.local.set({ sheetSettings: allSettings }, () => {
-        // Gửi kèm settings mới để content script có thể cập nhật ngay lập tức
-        sendMessageToActiveTab({ type: 'settingsUpdated', settings, sheetKey }).catch(
-          () => {}
-        )
-      })
-    })
   }
 
-  // Nút reset về mặc định
-  resetButton.addEventListener('click', () => {
-    hueb.off('change', save)
+  const huebRowLine = new Huebee('#rowLineColor', huebeeOptions)
+  const huebColLine = new Huebee('#colLineColor', huebeeOptions)
+  const huebRowFill = new Huebee('#rowFillColor', huebeeOptions)
+  const huebColFill = new Huebee('#colFillColor', huebeeOptions)
 
-    hueb.setColor(defaultColor)
-    opacityInput.value = defaultOpacity
-    rowInput.checked = defaultRow
-    columnInput.checked = defaultColumn
-    lineSizeInput.value = defaultLineSize
-    cellOpacityInput.value = String(defaultCellOpacity)
+  const huebees = [
+    { key: 'rowLineColor', hueb: huebRowLine },
+    { key: 'colLineColor', hueb: huebColLine },
+    { key: 'rowFillColor', hueb: huebRowFill },
+    { key: 'colFillColor', hueb: huebColFill },
+  ]
 
-    // Lưu lại mặc định cho sheet hiện tại
-    void save()
-    hueb.on('change', save)
-  })
-
-  const cycleColor = (delta) => {
+  const cycleColor = (hueb, delta) => {
     const current = hueb.color?.toLowerCase() ?? ''
     const idx = customColors.findIndex((c) => c.toLowerCase() === current)
     const len = customColors.length
@@ -119,11 +79,51 @@ window.addEventListener('load', () => {
     save()
   }
 
-  document.getElementById('prevColor').addEventListener('click', () => cycleColor(-1))
-  document.getElementById('nextColor').addEventListener('click', () => cycleColor(1))
+  const toFillOpacity = (input, fallback) =>
+    Math.min(
+      Math.max(
+        Math.round((parseFloat(input.value, 10) || fallback) * 20) / 20,
+        0
+      ),
+      0.5
+    )
 
-  // Khi mở popup: lấy cấu hình cho sheet hiện tại
-  ;(async () => {
+  /** Trả về object cấu hình từ giá trị hiện tại trên popup (dùng cho save / Set Default / Set Default All). */
+  const getCurrentSettings = () => {
+    const rowLineColor = huebRowLine.color ?? defaultRowLineColor
+    const colLineColor = huebColLine.color ?? defaultColLineColor
+    const rowFillColor = huebRowFill.color ?? defaultRowFillColor
+    const colFillColor = huebColFill.color ?? defaultColFillColor
+    const opacity = Math.min(
+      Math.max(parseFloat(opacityInput.value, 10) || 1, 0.1),
+      1
+    )
+    const lineSize = Math.min(
+      Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
+      5
+    )
+    const rowFillOpacity = toFillOpacity(rowOpacityInput, defaultRowFillOpacity)
+    const colFillOpacity = toFillOpacity(colOpacityInput, defaultColFillOpacity)
+    return {
+      color: rowLineColor,
+      rowLineColor,
+      colLineColor,
+      rowFillColor,
+      colFillColor,
+      opacity,
+      row: rowInput.checked,
+      column: columnInput.checked,
+      fillRow: fillRowInput.checked,
+      fillCol: fillColInput.checked,
+      lineSize,
+      rowFillOpacity,
+      colFillOpacity,
+      cellOpacity: rowFillOpacity,
+      updatedAt: Date.now(),
+    }
+  }
+
+  const save = async () => {
     let sheetKey = 'default'
     try {
       const response = await sendMessageToActiveTab({ type: 'getSheetKey' })
@@ -136,28 +136,112 @@ window.addEventListener('load', () => {
 
     chrome.storage.local.get(['sheetSettings'], (items) => {
       const allSettings = items.sheetSettings || {}
-      const current = allSettings[sheetKey] || {}
+      const settings = getCurrentSettings()
+      allSettings[sheetKey] = settings
 
-      hueb.setColor(current.color ?? defaultColor)
+      chrome.storage.local.set({ sheetSettings: allSettings }, () => {
+        sendMessageToActiveTab({ type: 'settingsUpdated', settings, sheetKey }).catch(
+          () => {}
+        )
+      })
+    })
+  }
+
+  resetButton.addEventListener('click', () => {
+    huebees.forEach(({ hueb }) => hueb.off('change', save))
+
+    huebRowLine.setColor(defaultRowLineColor)
+    huebColLine.setColor(defaultColLineColor)
+    huebRowFill.setColor(defaultRowFillColor)
+    huebColFill.setColor(defaultColFillColor)
+    opacityInput.value = defaultOpacity
+    rowInput.checked = defaultRow
+    columnInput.checked = defaultColumn
+    fillRowInput.checked = defaultFillRow
+    fillColInput.checked = defaultFillCol
+    lineSizeInput.value = defaultLineSize
+    rowOpacityInput.value = String(defaultRowFillOpacity)
+    colOpacityInput.value = String(defaultColFillOpacity)
+
+    void save()
+    huebees.forEach(({ hueb }) => hueb.on('change', save))
+  })
+
+  setDefaultButton.addEventListener('click', () => {
+    chrome.storage.local.set({ defaultSettings: getCurrentSettings() })
+  })
+
+  setDefaultAllButton.addEventListener('click', () => {
+    chrome.storage.local.get(['sheetSettings'], (items) => {
+      const allSettings = items.sheetSettings || {}
+      const settings = getCurrentSettings()
+      for (const key of Object.keys(allSettings)) {
+        allSettings[key] = { ...settings }
+      }
+      chrome.storage.local.set({ sheetSettings: allSettings }, () => {
+        sendMessageToActiveTab({ type: 'settingsUpdated', settings }).catch(() => {})
+      })
+    })
+  })
+
+  document.getElementById('prevRowLineColor').addEventListener('click', () => cycleColor(huebRowLine, -1))
+  document.getElementById('nextRowLineColor').addEventListener('click', () => cycleColor(huebRowLine, 1))
+  document.getElementById('prevColLineColor').addEventListener('click', () => cycleColor(huebColLine, -1))
+  document.getElementById('nextColLineColor').addEventListener('click', () => cycleColor(huebColLine, 1))
+  document.getElementById('prevRowFillColor').addEventListener('click', () => cycleColor(huebRowFill, -1))
+  document.getElementById('nextRowFillColor').addEventListener('click', () => cycleColor(huebRowFill, 1))
+  document.getElementById('prevColFillColor').addEventListener('click', () => cycleColor(huebColFill, -1))
+  document.getElementById('nextColFillColor').addEventListener('click', () => cycleColor(huebColFill, 1))
+
+  ;(async () => {
+    let sheetKey = 'default'
+    try {
+      const response = await sendMessageToActiveTab({ type: 'getSheetKey' })
+      if (response && typeof response.sheetKey === 'string') {
+        sheetKey = response.sheetKey
+      }
+    } catch {
+      // ignore
+    }
+
+    chrome.storage.local.get(['sheetSettings', 'defaultSettings'], (items) => {
+      const allSettings = items.sheetSettings || {}
+      const defaultSettings = items.defaultSettings || {}
+      const current = allSettings[sheetKey] ?? defaultSettings
+
+      const baseColor = current.color ?? defaultColor
+      const currentRowFillOpacity =
+        current.rowFillOpacity ?? current.cellOpacity ?? defaultRowFillOpacity
+      const currentColFillOpacity =
+        current.colFillOpacity ?? current.cellOpacity ?? defaultColFillOpacity
+
+      huebRowLine.setColor(current.rowLineColor ?? baseColor)
+      huebColLine.setColor(current.colLineColor ?? baseColor)
+      huebRowFill.setColor(current.rowFillColor ?? baseColor)
+      huebColFill.setColor(current.colFillColor ?? baseColor)
       opacityInput.value = current.opacity ?? defaultOpacity
       rowInput.checked = current.row ?? defaultRow
       columnInput.checked = current.column ?? defaultColumn
+      fillRowInput.checked = current.fillRow ?? defaultFillRow
+      fillColInput.checked = current.fillCol ?? defaultFillCol
       lineSizeInput.value = current.lineSize ?? defaultLineSize
-      cellOpacityInput.value = String(current.cellOpacity ?? defaultCellOpacity)
+      rowOpacityInput.value = String(currentRowFillOpacity)
+      colOpacityInput.value = String(currentColFillOpacity)
 
-      hueb.on('change', save)
+      huebees.forEach(({ hueb }) => hueb.on('change', save))
       opacityInput.addEventListener('change', () => void save())
       rowInput.addEventListener('change', () => void save())
       columnInput.addEventListener('change', () => void save())
+      fillRowInput.addEventListener('change', () => void save())
+      fillColInput.addEventListener('change', () => void save())
       lineSizeInput.addEventListener('change', () => void save())
-      cellOpacityInput.addEventListener('change', () => void save())
+      rowOpacityInput.addEventListener('change', () => void save())
+      colOpacityInput.addEventListener('change', () => void save())
     })
   })()
 
-  // Nhận message khi user bấm phím tắt (toggle row/column)
   chrome.runtime.onMessage.addListener((request) => {
     if (request.type !== 'commands') return
-
     rowInput.checked = request.row
     columnInput.checked = request.column
   })
