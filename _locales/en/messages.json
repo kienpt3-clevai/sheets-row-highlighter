@@ -11,5 +11,8 @@
   },
   "toggleBothDescription": {
     "message": "Toggle row and column highlight"
+  },
+  "slidesFitToScreenDescription": {
+    "message": "Google Slides: Fit to screen (send Ctrl+Alt+[)"
   }
 }

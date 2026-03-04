@@ -1,6 +1,15 @@
 importScripts('content/types.js')
 
 chrome.commands.onCommand.addListener((command) => {
+  if (command === 'slidesFitToScreen') {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'slidesFitToScreen' }).catch(() => {})
+      }
+    })
+    return
+  }
+
   chrome.storage.local.get(['row', 'column'], (items) => {
     let row = items.row ?? DEFAULT_ROW
     let column = items.column ?? DEFAULT_COLUMN

@@ -5,6 +5,10 @@ const FIT_KEY = '['
 const FIT_CODE = 'BracketLeft'
 const FIT_KEY_CODE = 219
 
+function isSlashKey(e) {
+  return e.key === '/' || e.key === 'Slash' || e.code === 'Slash' || e.keyCode === 191
+}
+
 function dispatchFitToScreen(target) {
   const opts = {
     key: FIT_KEY,
@@ -17,16 +21,31 @@ function dispatchFitToScreen(target) {
     cancelable: true,
   }
   target.dispatchEvent(new KeyboardEvent('keydown', opts))
-  target.dispatchEvent(new KeyboardEvent('keyup', { ...opts }))
+  // Keyup hơi trễ để giống thao tác thật (một số app chỉ xử lý khi có đủ down+up)
+  setTimeout(() => {
+    target.dispatchEvent(new KeyboardEvent('keyup', { ...opts }))
+  }, 0)
 }
 
+// Gọi từ command (phím tắt extension): bấm phím đã đăng ký → gửi Ctrl+Alt+[
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg.type !== 'slidesFitToScreen') return
+  dispatchFitToScreen(document)
+  dispatchFitToScreen(document.body)
+  sendResponse({ ok: true })
+  return true
+})
+
+// Fallback: bắt trực tiếp Ctrl+Alt+/ trong page (có thể không hoạt động do Slides dùng iframe/trusted)
 document.addEventListener(
   'keydown',
   (e) => {
-    if (!e.ctrlKey || !e.altKey || e.key !== '/') return
+    if (!e.ctrlKey || !e.altKey || !isSlashKey(e)) return
     e.preventDefault()
     e.stopPropagation()
-    dispatchFitToScreen(document)
+    const target = e.target && typeof e.target.dispatchEvent === 'function' ? e.target : document
+    dispatchFitToScreen(target)
+    if (target !== document) dispatchFitToScreen(document)
   },
   true
 )

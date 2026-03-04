@@ -11,5 +11,8 @@
   },
   "toggleBothDescription": {
     "message": "行と列ハイライト切り替え"
+  },
+  "slidesFitToScreenDescription": {
+    "message": "Google スライド: 画面に合わせる (Ctrl+Alt+[ を送信)"
   }
 }
