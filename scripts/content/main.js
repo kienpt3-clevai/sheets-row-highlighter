@@ -41,6 +41,106 @@ if (win === window.top && sheetsZoom) {
 }
 
 const storage = chrome.storage
+const defaultColor = typeof DEFAULT_COLOR !== 'undefined' ? DEFAULT_COLOR : '#c2185b'
+const defaultOpacity = typeof DEFAULT_OPACITY !== 'undefined' ? DEFAULT_OPACITY : '0.8'
+const defaultRow = typeof DEFAULT_ROW !== 'undefined' ? DEFAULT_ROW : true
+const defaultColumn = typeof DEFAULT_COLUMN !== 'undefined' ? DEFAULT_COLUMN : true
+const defaultFillRow = typeof DEFAULT_FILL_ROW !== 'undefined' ? DEFAULT_FILL_ROW : true
+const defaultFillCol = typeof DEFAULT_FILL_COL !== 'undefined' ? DEFAULT_FILL_COL : true
+const defaultLineSize = typeof DEFAULT_LINE_SIZE !== 'undefined' ? DEFAULT_LINE_SIZE : 3.25
+const defaultRowFillOpacity =
+  typeof DEFAULT_ROW_FILL_OPACITY !== 'undefined' ? DEFAULT_ROW_FILL_OPACITY : 0.05
+const defaultColFillOpacity =
+  typeof DEFAULT_COL_FILL_OPACITY !== 'undefined' ? DEFAULT_COL_FILL_OPACITY : 0.05
+const defaultRowLineColor =
+  typeof DEFAULT_ROW_LINE_COLOR !== 'undefined' ? DEFAULT_ROW_LINE_COLOR : defaultColor
+const defaultColLineColor =
+  typeof DEFAULT_COL_LINE_COLOR !== 'undefined' ? DEFAULT_COL_LINE_COLOR : defaultColor
+const defaultRowFillColor =
+  typeof DEFAULT_ROW_FILL_COLOR !== 'undefined' ? DEFAULT_ROW_FILL_COLOR : defaultColor
+const defaultColFillColor =
+  typeof DEFAULT_COL_FILL_COLOR !== 'undefined' ? DEFAULT_COL_FILL_COLOR : defaultColor
+const fallbackDefaults = {
+  defaultColor,
+  defaultOpacity,
+  defaultRow,
+  defaultColumn,
+  defaultFillRow,
+  defaultFillCol,
+  defaultLineSize,
+  defaultRowFillOpacity,
+  defaultColFillOpacity,
+  defaultRowLineColor,
+  defaultColLineColor,
+  defaultRowFillColor,
+  defaultColFillColor,
+}
+const normalizePopupSettings =
+  typeof PopupSettingsUtils !== 'undefined' &&
+  PopupSettingsUtils &&
+  typeof PopupSettingsUtils.normalizePopupSettings === 'function'
+    ? PopupSettingsUtils.normalizePopupSettings
+    : (sheetSettings, storedDefaults, fallback) => ({
+        color: sheetSettings?.color ?? storedDefaults?.color ?? fallback.defaultColor,
+        rowLineColor:
+          sheetSettings?.rowLineColor ??
+          storedDefaults?.rowLineColor ??
+          sheetSettings?.color ??
+          storedDefaults?.color ??
+          fallback.defaultRowLineColor,
+        colLineColor:
+          sheetSettings?.colLineColor ??
+          storedDefaults?.colLineColor ??
+          sheetSettings?.color ??
+          storedDefaults?.color ??
+          fallback.defaultColLineColor,
+        rowFillColor:
+          sheetSettings?.rowFillColor ??
+          storedDefaults?.rowFillColor ??
+          sheetSettings?.color ??
+          storedDefaults?.color ??
+          fallback.defaultRowFillColor,
+        colFillColor:
+          sheetSettings?.colFillColor ??
+          storedDefaults?.colFillColor ??
+          sheetSettings?.color ??
+          storedDefaults?.color ??
+          fallback.defaultColFillColor,
+        opacity: sheetSettings?.opacity ?? storedDefaults?.opacity ?? fallback.defaultOpacity,
+        row: sheetSettings?.row ?? storedDefaults?.row ?? fallback.defaultRow,
+        column: sheetSettings?.column ?? storedDefaults?.column ?? fallback.defaultColumn,
+        fillRow: sheetSettings?.fillRow ?? storedDefaults?.fillRow ?? fallback.defaultFillRow,
+        fillCol: sheetSettings?.fillCol ?? storedDefaults?.fillCol ?? fallback.defaultFillCol,
+        lineSize: sheetSettings?.lineSize ?? storedDefaults?.lineSize ?? fallback.defaultLineSize,
+        rowFillOpacity:
+          sheetSettings?.rowFillOpacity ??
+          sheetSettings?.cellOpacity ??
+          storedDefaults?.rowFillOpacity ??
+          storedDefaults?.cellOpacity ??
+          fallback.defaultRowFillOpacity,
+        colFillOpacity:
+          sheetSettings?.colFillOpacity ??
+          sheetSettings?.cellOpacity ??
+          storedDefaults?.colFillOpacity ??
+          storedDefaults?.cellOpacity ??
+          fallback.defaultColFillOpacity,
+      })
+
+const applySettingsToApp = (settings) => {
+  app.backgroundColor = settings.color
+  app.rowLineColor = settings.rowLineColor
+  app.colLineColor = settings.colLineColor
+  app.rowFillColor = settings.rowFillColor
+  app.colFillColor = settings.colFillColor
+  app.opacity = settings.opacity
+  app.isRowEnabled = settings.row
+  app.isColEnabled = settings.column
+  app.fillRowEnabled = settings.fillRow
+  app.fillColEnabled = settings.fillCol
+  app.lineSize = settings.lineSize
+  app.rowFillOpacity = settings.rowFillOpacity
+  app.colFillOpacity = settings.colFillOpacity
+}
 
 const loadSettings = () => {
   const sheetKey =
@@ -72,27 +172,8 @@ const loadSettings = () => {
       storage.local.set({ sheetSettings: pruned })
     }
 
-    const current = pruned[sheetKey] ?? defaultSettings
-
-    const currentRowFillOpacity =
-      current.rowFillOpacity ?? current.cellOpacity ?? app.rowFillOpacity
-    const currentColFillOpacity =
-      current.colFillOpacity ?? current.cellOpacity ?? app.colFillOpacity
-
-    const baseColor = current.color ?? app.backgroundColor
-    app.backgroundColor = baseColor
-    app.rowLineColor = current.rowLineColor ?? baseColor
-    app.colLineColor = current.colLineColor ?? baseColor
-    app.rowFillColor = current.rowFillColor ?? baseColor
-    app.colFillColor = current.colFillColor ?? baseColor
-    app.opacity = current.opacity ?? app.opacity
-    app.isRowEnabled = current.row ?? app.isRowEnabled
-    app.isColEnabled = current.column ?? app.isColEnabled
-    app.fillRowEnabled = current.fillRow ?? app.fillRowEnabled
-    app.fillColEnabled = current.fillCol ?? app.fillColEnabled
-    app.lineSize = current.lineSize ?? app.lineSize
-    app.rowFillOpacity = currentRowFillOpacity
-    app.colFillOpacity = currentColFillOpacity
+    const current = normalizePopupSettings(pruned[sheetKey], defaultSettings, fallbackDefaults)
+    applySettingsToApp(current)
 
     updateHighlight()
   })
@@ -124,26 +205,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
   if (message.type === 'settingsUpdated') {
     if (message.settings && typeof message.settings === 'object') {
-      const current = message.settings
-      const currentRowFillOpacity =
-        current.rowFillOpacity ?? current.cellOpacity ?? app.rowFillOpacity
-      const currentColFillOpacity =
-        current.colFillOpacity ?? current.cellOpacity ?? app.colFillOpacity
-      const baseColor = current.color ?? app.backgroundColor
-      app.backgroundColor = baseColor
-      app.rowLineColor = current.rowLineColor ?? baseColor
-      app.colLineColor = current.colLineColor ?? baseColor
-      app.rowFillColor = current.rowFillColor ?? baseColor
-      app.colFillColor = current.colFillColor ?? baseColor
-      app.opacity = current.opacity ?? app.opacity
-      app.isRowEnabled = current.row ?? app.isRowEnabled
-      app.isColEnabled = current.column ?? app.isColEnabled
-      app.fillRowEnabled = current.fillRow ?? app.fillRowEnabled
-      app.fillColEnabled = current.fillCol ?? app.fillColEnabled
-      app.lineSize = current.lineSize ?? app.lineSize
-      app.rowFillOpacity = currentRowFillOpacity
-      app.colFillOpacity = currentColFillOpacity
-
+      const current = normalizePopupSettings(message.settings, undefined, fallbackDefaults)
+      applySettingsToApp(current)
       updateHighlight()
     } else {
       loadSettings()

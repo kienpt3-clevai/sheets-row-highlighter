@@ -1,5 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
 
 const { getResetSettings, normalizePopupSettings } = require('../scripts/popupSettings.js')
 
@@ -121,5 +123,24 @@ test('normalizePopupSettings falls back from cellOpacity when fill opacities are
       rowFillOpacity: 0.3,
       colFillOpacity: 0.3,
     }
+  )
+})
+
+test('spreadsheet content scripts load popupSettings helper before main.js', () => {
+  const manifestPath = path.join(__dirname, '..', 'manifest.json')
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+  const spreadsheetScripts = manifest.content_scripts.find((entry) =>
+    entry.matches.includes('https://docs.google.com/spreadsheets/d/*')
+  )?.js
+
+  assert.ok(Array.isArray(spreadsheetScripts), 'spreadsheet content scripts should exist')
+  assert.ok(
+    spreadsheetScripts.includes('scripts/popupSettings.js'),
+    'popupSettings helper should be injected into spreadsheet pages'
+  )
+  assert.ok(
+    spreadsheetScripts.indexOf('scripts/popupSettings.js') <
+      spreadsheetScripts.indexOf('scripts/content/main.js'),
+    'popupSettings helper must load before main.js'
   )
 })
