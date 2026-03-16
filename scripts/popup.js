@@ -39,6 +39,41 @@ window.addEventListener('load', () => {
     typeof DEFAULT_ROW_FILL_COLOR !== 'undefined' ? DEFAULT_ROW_FILL_COLOR : defaultColor
   const defaultColFillColor =
     typeof DEFAULT_COL_FILL_COLOR !== 'undefined' ? DEFAULT_COL_FILL_COLOR : defaultColor
+  const fallbackDefaults = {
+    defaultColor,
+    defaultOpacity,
+    defaultRow,
+    defaultColumn,
+    defaultFillRow,
+    defaultFillCol,
+    defaultLineSize,
+    defaultRowFillOpacity,
+    defaultColFillOpacity,
+    defaultRowLineColor,
+    defaultColLineColor,
+    defaultRowFillColor,
+    defaultColFillColor,
+  }
+  const getResetSettings =
+    typeof PopupSettingsUtils !== 'undefined' &&
+    PopupSettingsUtils &&
+    typeof PopupSettingsUtils.getResetSettings === 'function'
+      ? PopupSettingsUtils.getResetSettings
+      : (_storedDefaults, fallback) => ({
+          color: fallback.defaultColor,
+          rowLineColor: fallback.defaultRowLineColor,
+          colLineColor: fallback.defaultColLineColor,
+          rowFillColor: fallback.defaultRowFillColor,
+          colFillColor: fallback.defaultColFillColor,
+          opacity: fallback.defaultOpacity,
+          row: fallback.defaultRow,
+          column: fallback.defaultColumn,
+          fillRow: fallback.defaultFillRow,
+          fillCol: fallback.defaultFillCol,
+          lineSize: fallback.defaultLineSize,
+          rowFillOpacity: fallback.defaultRowFillOpacity,
+          colFillOpacity: fallback.defaultColFillOpacity,
+        })
 
   const customColors = [
     '#0e65eb',
@@ -148,23 +183,27 @@ window.addEventListener('load', () => {
   }
 
   resetButton.addEventListener('click', () => {
-    huebees.forEach(({ hueb }) => hueb.off('change', save))
+    chrome.storage.local.get(['defaultSettings'], (items) => {
+      const resetSettings = getResetSettings(items.defaultSettings, fallbackDefaults)
 
-    huebRowLine.setColor(defaultRowLineColor)
-    huebColLine.setColor(defaultColLineColor)
-    huebRowFill.setColor(defaultRowFillColor)
-    huebColFill.setColor(defaultColFillColor)
-    opacityInput.value = defaultOpacity
-    rowInput.checked = defaultRow
-    columnInput.checked = defaultColumn
-    fillRowInput.checked = defaultFillRow
-    fillColInput.checked = defaultFillCol
-    lineSizeInput.value = defaultLineSize
-    rowOpacityInput.value = String(defaultRowFillOpacity)
-    colOpacityInput.value = String(defaultColFillOpacity)
+      huebees.forEach(({ hueb }) => hueb.off('change', save))
 
-    void save()
-    huebees.forEach(({ hueb }) => hueb.on('change', save))
+      huebRowLine.setColor(resetSettings.rowLineColor)
+      huebColLine.setColor(resetSettings.colLineColor)
+      huebRowFill.setColor(resetSettings.rowFillColor)
+      huebColFill.setColor(resetSettings.colFillColor)
+      opacityInput.value = resetSettings.opacity
+      rowInput.checked = resetSettings.row
+      columnInput.checked = resetSettings.column
+      fillRowInput.checked = resetSettings.fillRow
+      fillColInput.checked = resetSettings.fillCol
+      lineSizeInput.value = resetSettings.lineSize
+      rowOpacityInput.value = String(resetSettings.rowFillOpacity)
+      colOpacityInput.value = String(resetSettings.colFillOpacity)
+
+      void save()
+      huebees.forEach(({ hueb }) => hueb.on('change', save))
+    })
   })
 
   setDefaultButton.addEventListener('click', () => {
