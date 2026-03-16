@@ -8,10 +8,10 @@ const sendMessageToActiveTab = async (message) => {
 }
 
 window.addEventListener('load', () => {
-  const opacityInput = document.getElementById('opacity')
   const rowInput = document.getElementById('row')
   const columnInput = document.getElementById('column')
-  const lineSizeInput = document.getElementById('lineSize')
+  const rowLineSizeInput = document.getElementById('rowLineSize')
+  const colLineSizeInput = document.getElementById('colLineSize')
   const rowOpacityInput = document.getElementById('rowOpacity')
   const colOpacityInput = document.getElementById('colOpacity')
   const fillRowInput = document.getElementById('fillRow')
@@ -21,12 +21,16 @@ window.addEventListener('load', () => {
   const setDefaultAllButton = document.getElementById('setDefaultAll')
 
   const defaultColor = typeof DEFAULT_COLOR !== 'undefined' ? DEFAULT_COLOR : '#c2185b'
-  const defaultOpacity = typeof DEFAULT_OPACITY !== 'undefined' ? DEFAULT_OPACITY : '0.8'
+  const defaultOpacity = typeof DEFAULT_OPACITY !== 'undefined' ? DEFAULT_OPACITY : '1'
   const defaultRow = typeof DEFAULT_ROW !== 'undefined' ? DEFAULT_ROW : true
   const defaultColumn = typeof DEFAULT_COLUMN !== 'undefined' ? DEFAULT_COLUMN : true
   const defaultFillRow = typeof DEFAULT_FILL_ROW !== 'undefined' ? DEFAULT_FILL_ROW : true
   const defaultFillCol = typeof DEFAULT_FILL_COL !== 'undefined' ? DEFAULT_FILL_COL : true
   const defaultLineSize = typeof DEFAULT_LINE_SIZE !== 'undefined' ? DEFAULT_LINE_SIZE : 3.25
+  const defaultRowLineSize =
+    typeof DEFAULT_ROW_LINE_SIZE !== 'undefined' ? DEFAULT_ROW_LINE_SIZE : defaultLineSize
+  const defaultColLineSize =
+    typeof DEFAULT_COL_LINE_SIZE !== 'undefined' ? DEFAULT_COL_LINE_SIZE : defaultLineSize
   const defaultRowFillOpacity =
     typeof DEFAULT_ROW_FILL_OPACITY !== 'undefined' ? DEFAULT_ROW_FILL_OPACITY : 0.05
   const defaultColFillOpacity =
@@ -46,7 +50,8 @@ window.addEventListener('load', () => {
     defaultColumn,
     defaultFillRow,
     defaultFillCol,
-    defaultLineSize,
+    defaultRowLineSize,
+    defaultColLineSize,
     defaultRowFillOpacity,
     defaultColFillOpacity,
     defaultRowLineColor,
@@ -85,12 +90,23 @@ window.addEventListener('load', () => {
             sheetSettings?.color ??
             storedDefaults?.color ??
             fallback.defaultColFillColor,
-          opacity: sheetSettings?.opacity ?? storedDefaults?.opacity ?? fallback.defaultOpacity,
+          opacity: String(fallback.defaultOpacity),
           row: sheetSettings?.row ?? storedDefaults?.row ?? fallback.defaultRow,
           column: sheetSettings?.column ?? storedDefaults?.column ?? fallback.defaultColumn,
           fillRow: sheetSettings?.fillRow ?? storedDefaults?.fillRow ?? fallback.defaultFillRow,
           fillCol: sheetSettings?.fillCol ?? storedDefaults?.fillCol ?? fallback.defaultFillCol,
-          lineSize: sheetSettings?.lineSize ?? storedDefaults?.lineSize ?? fallback.defaultLineSize,
+          rowLineSize:
+            sheetSettings?.rowLineSize ??
+            sheetSettings?.lineSize ??
+            storedDefaults?.rowLineSize ??
+            storedDefaults?.lineSize ??
+            fallback.defaultRowLineSize,
+          colLineSize:
+            sheetSettings?.colLineSize ??
+            sheetSettings?.lineSize ??
+            storedDefaults?.colLineSize ??
+            storedDefaults?.lineSize ??
+            fallback.defaultColLineSize,
           rowFillOpacity:
             sheetSettings?.rowFillOpacity ??
             sheetSettings?.cellOpacity ??
@@ -159,12 +175,12 @@ window.addEventListener('load', () => {
     const colLineColor = huebColLine.color ?? defaultColLineColor
     const rowFillColor = huebRowFill.color ?? defaultRowFillColor
     const colFillColor = huebColFill.color ?? defaultColFillColor
-    const opacity = Math.min(
-      Math.max(parseFloat(opacityInput.value, 10) || 1, 0.1),
-      1
+    const rowLineSize = Math.min(
+      Math.max(parseFloat(rowLineSizeInput.value, 10) || defaultRowLineSize, 0.5),
+      5
     )
-    const lineSize = Math.min(
-      Math.max(parseFloat(lineSizeInput.value, 10) || defaultLineSize, 0.5),
+    const colLineSize = Math.min(
+      Math.max(parseFloat(colLineSizeInput.value, 10) || defaultColLineSize, 0.5),
       5
     )
     const rowFillOpacity = toFillOpacity(rowOpacityInput, defaultRowFillOpacity)
@@ -175,12 +191,13 @@ window.addEventListener('load', () => {
       colLineColor,
       rowFillColor,
       colFillColor,
-      opacity,
+      opacity: String(defaultOpacity),
       row: rowInput.checked,
       column: columnInput.checked,
       fillRow: fillRowInput.checked,
       fillCol: fillColInput.checked,
-      lineSize,
+      rowLineSize,
+      colLineSize,
       rowFillOpacity,
       colFillOpacity,
       cellOpacity: rowFillOpacity,
@@ -222,12 +239,13 @@ window.addEventListener('load', () => {
       huebColLine.setColor(resetSettings.colLineColor)
       huebRowFill.setColor(resetSettings.rowFillColor)
       huebColFill.setColor(resetSettings.colFillColor)
-      opacityInput.value = resetSettings.opacity
+      // Line opacity is fixed to 1.0 and no longer configurable.
       rowInput.checked = resetSettings.row
       columnInput.checked = resetSettings.column
       fillRowInput.checked = resetSettings.fillRow
       fillColInput.checked = resetSettings.fillCol
-      lineSizeInput.value = resetSettings.lineSize
+      rowLineSizeInput.value = resetSettings.rowLineSize
+      colLineSizeInput.value = resetSettings.colLineSize
       rowOpacityInput.value = String(resetSettings.rowFillOpacity)
       colOpacityInput.value = String(resetSettings.colFillOpacity)
 
@@ -286,22 +304,23 @@ window.addEventListener('load', () => {
       huebColLine.setColor(current.colLineColor)
       huebRowFill.setColor(current.rowFillColor)
       huebColFill.setColor(current.colFillColor)
-      opacityInput.value = current.opacity
+      // Line opacity is fixed to 1.0 and no longer configurable.
       rowInput.checked = current.row
       columnInput.checked = current.column
       fillRowInput.checked = current.fillRow
       fillColInput.checked = current.fillCol
-      lineSizeInput.value = current.lineSize
+      rowLineSizeInput.value = current.rowLineSize
+      colLineSizeInput.value = current.colLineSize
       rowOpacityInput.value = String(current.rowFillOpacity)
       colOpacityInput.value = String(current.colFillOpacity)
 
       huebees.forEach(({ hueb }) => hueb.on('change', save))
-      opacityInput.addEventListener('change', () => void save())
       rowInput.addEventListener('change', () => void save())
       columnInput.addEventListener('change', () => void save())
       fillRowInput.addEventListener('change', () => void save())
       fillColInput.addEventListener('change', () => void save())
-      lineSizeInput.addEventListener('change', () => void save())
+      rowLineSizeInput.addEventListener('change', () => void save())
+      colLineSizeInput.addEventListener('change', () => void save())
       rowOpacityInput.addEventListener('change', () => void save())
       colOpacityInput.addEventListener('change', () => void save())
     })

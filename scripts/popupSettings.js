@@ -21,7 +21,8 @@
    *   defaultColumn: boolean
    *   defaultFillRow: boolean
    *   defaultFillCol: boolean
-   *   defaultLineSize: number
+   *   defaultRowLineSize: number
+   *   defaultColLineSize: number
    *   defaultRowFillOpacity: number
    *   defaultColFillOpacity: number
    *   defaultRowLineColor: string
@@ -57,12 +58,24 @@
         defaults.colFillColor ??
         baseColor ??
         fallbackDefaults.defaultColFillColor,
-      opacity: current.opacity ?? defaults.opacity ?? fallbackDefaults.defaultOpacity,
+      // Line opacity is no longer configurable; keep it fixed at 1.0.
+      opacity: String(fallbackDefaults.defaultOpacity),
       row: current.row ?? defaults.row ?? fallbackDefaults.defaultRow,
       column: current.column ?? defaults.column ?? fallbackDefaults.defaultColumn,
       fillRow: current.fillRow ?? defaults.fillRow ?? fallbackDefaults.defaultFillRow,
       fillCol: current.fillCol ?? defaults.fillCol ?? fallbackDefaults.defaultFillCol,
-      lineSize: current.lineSize ?? defaults.lineSize ?? fallbackDefaults.defaultLineSize,
+      rowLineSize:
+        current.rowLineSize ??
+        current.lineSize ??
+        defaults.rowLineSize ??
+        defaults.lineSize ??
+        fallbackDefaults.defaultRowLineSize,
+      colLineSize:
+        current.colLineSize ??
+        current.lineSize ??
+        defaults.colLineSize ??
+        defaults.lineSize ??
+        fallbackDefaults.defaultColLineSize,
       rowFillOpacity:
         current.rowFillOpacity ??
         current.cellOpacity ??

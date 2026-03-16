@@ -15,10 +15,10 @@
       <h1 class="popup-title">Google Sheets Highlight 1.3.0</h1>
       <form class="popup-form">
         <div class="popup-grid popup-grid-3">
-          <!-- Row 1: Line Opacity | Line Row | color Line Row -->
+          <!-- Row 1: Row Size | Line Row | color Line Row -->
           <div class="popup-cell popup-cell-c1">
-            <label class="popup-label" for="opacity">Line Opa</label>
-            <input type="number" class="popup-input" id="opacity" min="0.1" max="1" step="0.1" />
+            <label class="popup-label" for="rowLineSize">Row Size</label>
+            <input type="number" class="popup-input" id="rowLineSize" min="0.5" max="5" step="0.25" />
           </div>
           <div class="popup-cell popup-cell-c2">
             <label class="popup-label" for="row">Line Row</label>
@@ -29,10 +29,10 @@
             <button type="button" class="popup-btn popup-btn-nav" id="prevRowLineColor" title="Previous color">◀</button>
             <button type="button" class="popup-btn popup-btn-nav" id="nextRowLineColor" title="Next color">▶</button>
           </div>
-          <!-- Row 2: Line Size | Line Col | color Line Col -->
+          <!-- Row 2: Col Size | Line Col | color Line Col -->
           <div class="popup-cell popup-cell-c1">
-            <label class="popup-label" for="lineSize">Line Size</label>
-            <input type="number" class="popup-input" id="lineSize" min="0.5" max="5" step="0.25" />
+            <label class="popup-label" for="colLineSize">Col Size</label>
+            <input type="number" class="popup-input" id="colLineSize" min="0.5" max="5" step="0.25" />
           </div>
           <div class="popup-cell popup-cell-c2">
             <label class="popup-label" for="column">Line Col</label>

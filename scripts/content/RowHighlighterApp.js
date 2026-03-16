@@ -18,8 +18,9 @@ class RowHighlighterApp {
     this.colLineColor = this.backgroundColor
     this.rowFillColor = this.backgroundColor
     this.colFillColor = this.backgroundColor
-    this.opacity = '0.1'
-    this.lineSize = 3.25
+    this.opacity = '1'
+    this.rowLineSize = 3.25
+    this.colLineSize = 3.25
     // Opacity fill riêng cho row/col (popup: Row Opacity / Col Opacity)
     this.rowFillOpacity = 0.05
     this.colFillOpacity = 0.05
@@ -49,10 +50,9 @@ class RowHighlighterApp {
       ...this.locator.getSheetContainerStyle(),
     })
 
-    const borderWidth = `${this.lineSize}px`
-
     // Tâm line trùng line xanh dương; dày đều về 2 phía (cả 4 line: trên, dưới, trái, phải)
-    const halfLine = this.lineSize / 2
+    const halfRowLine = this.rowLineSize / 2
+    const halfColLine = this.colLineSize / 2
 
     /** @type {Array<{isRow?: boolean, isCellFill?: boolean, left: string, top: string, width: string, height: string}>} */
     let highlightTaskList = []
@@ -69,16 +69,16 @@ class RowHighlighterApp {
     const rowBands = this.isRowEnabled
       ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
           left: `${insL + oHL}px`,
-          top: `${y - halfLine + oHT}px`,
+          top: `${y - halfRowLine + oHT}px`,
           width: `calc(100% - ${insL + insR - oHL - oHR}px)`,
-          height: `${height - insB + this.lineSize + oHB - oHT}px`,
+          height: `${height - insB + this.rowLineSize + oHB - oHT}px`,
         }))
       : []
     const colBands = this.isColEnabled
       ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
-          left: `${x + insL - halfLine + oHL}px`,
+          left: `${x + insL - halfColLine + oHL}px`,
           top: `${insT + oHT}px`,
-          width: `${width - insL - insR + this.lineSize + oHR - oHL}px`,
+          width: `${width - insL - insR + this.colLineSize + oHR - oHL}px`,
           height: `calc(100% - ${insT + insB - oHB + oHT}px)`,
         }))
       : []
@@ -154,14 +154,14 @@ class RowHighlighterApp {
       const border =
         isRow === true
           ? {
-              borderTop: `${borderWidth} ${borderStyle}`,
-              borderBottom: `${borderWidth} ${borderStyle}`,
+              borderTop: `${this.rowLineSize}px ${borderStyle}`,
+              borderBottom: `${this.rowLineSize}px ${borderStyle}`,
               borderLeft: 'none',
               borderRight: 'none',
             }
           : {
-              borderLeft: `${borderWidth} ${borderStyle}`,
-              borderRight: `${borderWidth} ${borderStyle}`,
+              borderLeft: `${this.colLineSize}px ${borderStyle}`,
+              borderRight: `${this.colLineSize}px ${borderStyle}`,
               borderTop: 'none',
               borderBottom: 'none',
             }

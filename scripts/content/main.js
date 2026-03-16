@@ -42,12 +42,16 @@ if (win === window.top && sheetsZoom) {
 
 const storage = chrome.storage
 const defaultColor = typeof DEFAULT_COLOR !== 'undefined' ? DEFAULT_COLOR : '#c2185b'
-const defaultOpacity = typeof DEFAULT_OPACITY !== 'undefined' ? DEFAULT_OPACITY : '0.8'
+const defaultOpacity = typeof DEFAULT_OPACITY !== 'undefined' ? DEFAULT_OPACITY : '1'
 const defaultRow = typeof DEFAULT_ROW !== 'undefined' ? DEFAULT_ROW : true
 const defaultColumn = typeof DEFAULT_COLUMN !== 'undefined' ? DEFAULT_COLUMN : true
 const defaultFillRow = typeof DEFAULT_FILL_ROW !== 'undefined' ? DEFAULT_FILL_ROW : true
 const defaultFillCol = typeof DEFAULT_FILL_COL !== 'undefined' ? DEFAULT_FILL_COL : true
 const defaultLineSize = typeof DEFAULT_LINE_SIZE !== 'undefined' ? DEFAULT_LINE_SIZE : 3.25
+const defaultRowLineSize =
+  typeof DEFAULT_ROW_LINE_SIZE !== 'undefined' ? DEFAULT_ROW_LINE_SIZE : defaultLineSize
+const defaultColLineSize =
+  typeof DEFAULT_COL_LINE_SIZE !== 'undefined' ? DEFAULT_COL_LINE_SIZE : defaultLineSize
 const defaultRowFillOpacity =
   typeof DEFAULT_ROW_FILL_OPACITY !== 'undefined' ? DEFAULT_ROW_FILL_OPACITY : 0.05
 const defaultColFillOpacity =
@@ -67,7 +71,8 @@ const fallbackDefaults = {
   defaultColumn,
   defaultFillRow,
   defaultFillCol,
-  defaultLineSize,
+  defaultRowLineSize,
+  defaultColLineSize,
   defaultRowFillOpacity,
   defaultColFillOpacity,
   defaultRowLineColor,
@@ -106,12 +111,23 @@ const normalizePopupSettings =
           sheetSettings?.color ??
           storedDefaults?.color ??
           fallback.defaultColFillColor,
-        opacity: sheetSettings?.opacity ?? storedDefaults?.opacity ?? fallback.defaultOpacity,
+        opacity: String(fallback.defaultOpacity),
         row: sheetSettings?.row ?? storedDefaults?.row ?? fallback.defaultRow,
         column: sheetSettings?.column ?? storedDefaults?.column ?? fallback.defaultColumn,
         fillRow: sheetSettings?.fillRow ?? storedDefaults?.fillRow ?? fallback.defaultFillRow,
         fillCol: sheetSettings?.fillCol ?? storedDefaults?.fillCol ?? fallback.defaultFillCol,
-        lineSize: sheetSettings?.lineSize ?? storedDefaults?.lineSize ?? fallback.defaultLineSize,
+        rowLineSize:
+          sheetSettings?.rowLineSize ??
+          sheetSettings?.lineSize ??
+          storedDefaults?.rowLineSize ??
+          storedDefaults?.lineSize ??
+          fallback.defaultRowLineSize,
+        colLineSize:
+          sheetSettings?.colLineSize ??
+          sheetSettings?.lineSize ??
+          storedDefaults?.colLineSize ??
+          storedDefaults?.lineSize ??
+          fallback.defaultColLineSize,
         rowFillOpacity:
           sheetSettings?.rowFillOpacity ??
           sheetSettings?.cellOpacity ??
@@ -137,7 +153,8 @@ const applySettingsToApp = (settings) => {
   app.isColEnabled = settings.column
   app.fillRowEnabled = settings.fillRow
   app.fillColEnabled = settings.fillCol
-  app.lineSize = settings.lineSize
+  app.rowLineSize = settings.rowLineSize
+  app.colLineSize = settings.colLineSize
   app.rowFillOpacity = settings.rowFillOpacity
   app.colFillOpacity = settings.colFillOpacity
 }

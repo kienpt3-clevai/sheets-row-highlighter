@@ -7,12 +7,13 @@ const { getResetSettings, normalizePopupSettings } = require('../scripts/popupSe
 
 const fallbackDefaults = {
   defaultColor: '#c2185b',
-  defaultOpacity: '0.8',
+  defaultOpacity: '1',
   defaultRow: true,
   defaultColumn: true,
   defaultFillRow: true,
   defaultFillCol: true,
-  defaultLineSize: 3.25,
+  defaultRowLineSize: 3.25,
+  defaultColLineSize: 3.25,
   defaultRowFillOpacity: 0.05,
   defaultColFillOpacity: 0.05,
   defaultRowLineColor: '#c2185b',
@@ -33,12 +34,16 @@ test('getResetSettings prefers saved user defaults over hard-coded defaults', ()
     column: true,
     fillRow: false,
     fillCol: true,
-    lineSize: 1.5,
+    rowLineSize: 1.5,
+    colLineSize: 2.5,
     rowFillOpacity: 0.15,
     colFillOpacity: 0.2,
   }
 
-  assert.deepEqual(getResetSettings(userDefaults, fallbackDefaults), userDefaults)
+  assert.deepEqual(getResetSettings(userDefaults, fallbackDefaults), {
+    ...userDefaults,
+    opacity: '1',
+  })
 })
 
 test('getResetSettings falls back to hard-coded defaults when user defaults are missing', () => {
@@ -48,12 +53,13 @@ test('getResetSettings falls back to hard-coded defaults when user defaults are 
     colLineColor: '#c2185b',
     rowFillColor: '#c2185b',
     colFillColor: '#c2185b',
-    opacity: '0.8',
+    opacity: '1',
     row: true,
     column: true,
     fillRow: true,
     fillCol: true,
-    lineSize: 3.25,
+    rowLineSize: 3.25,
+    colLineSize: 3.25,
     rowFillOpacity: 0.05,
     colFillOpacity: 0.05,
   })
@@ -76,7 +82,8 @@ test('normalizePopupSettings merges partial sheet settings over user defaults', 
     column: true,
     fillRow: true,
     fillCol: false,
-    lineSize: 1.5,
+    rowLineSize: 1.5,
+    colLineSize: 2.5,
     rowFillOpacity: 0.15,
     colFillOpacity: 0.2,
   }
@@ -87,12 +94,13 @@ test('normalizePopupSettings merges partial sheet settings over user defaults', 
     colLineColor: '#1b5e20',
     rowFillColor: '#5c0eec',
     colFillColor: '#ec930e',
-    opacity: 0.6,
+    opacity: '1',
     row: false,
     column: true,
     fillRow: false,
     fillCol: false,
-    lineSize: 1.5,
+    rowLineSize: 1.5,
+    colLineSize: 2.5,
     rowFillOpacity: 0.25,
     colFillOpacity: 0.2,
   })
@@ -114,14 +122,45 @@ test('normalizePopupSettings falls back from cellOpacity when fill opacities are
       colLineColor: '#6a1b9a',
       rowFillColor: '#6a1b9a',
       colFillColor: '#6a1b9a',
-      opacity: '0.8',
+      opacity: '1',
       row: true,
       column: true,
       fillRow: true,
       fillCol: true,
-      lineSize: 3.25,
+      rowLineSize: 3.25,
+      colLineSize: 3.25,
       rowFillOpacity: 0.3,
       colFillOpacity: 0.3,
+    }
+  )
+})
+
+test('normalizePopupSettings falls back from legacy lineSize for both row and col line sizes', () => {
+  assert.deepEqual(
+    normalizePopupSettings(
+      {
+        lineSize: 4,
+      },
+      {
+        lineSize: 2.5,
+      },
+      fallbackDefaults
+    ),
+    {
+      color: '#c2185b',
+      rowLineColor: '#c2185b',
+      colLineColor: '#c2185b',
+      rowFillColor: '#c2185b',
+      colFillColor: '#c2185b',
+      opacity: '1',
+      row: true,
+      column: true,
+      fillRow: true,
+      fillCol: true,
+      rowLineSize: 4,
+      colLineSize: 4,
+      rowFillOpacity: 0.05,
+      colFillOpacity: 0.05,
     }
   )
 })
