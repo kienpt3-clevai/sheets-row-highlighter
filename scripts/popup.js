@@ -54,25 +54,55 @@ window.addEventListener('load', () => {
     defaultRowFillColor,
     defaultColFillColor,
   }
-  const getResetSettings =
+  const normalizePopupSettings =
     typeof PopupSettingsUtils !== 'undefined' &&
     PopupSettingsUtils &&
-    typeof PopupSettingsUtils.getResetSettings === 'function'
-      ? PopupSettingsUtils.getResetSettings
-      : (_storedDefaults, fallback) => ({
-          color: fallback.defaultColor,
-          rowLineColor: fallback.defaultRowLineColor,
-          colLineColor: fallback.defaultColLineColor,
-          rowFillColor: fallback.defaultRowFillColor,
-          colFillColor: fallback.defaultColFillColor,
-          opacity: fallback.defaultOpacity,
-          row: fallback.defaultRow,
-          column: fallback.defaultColumn,
-          fillRow: fallback.defaultFillRow,
-          fillCol: fallback.defaultFillCol,
-          lineSize: fallback.defaultLineSize,
-          rowFillOpacity: fallback.defaultRowFillOpacity,
-          colFillOpacity: fallback.defaultColFillOpacity,
+    typeof PopupSettingsUtils.normalizePopupSettings === 'function'
+      ? PopupSettingsUtils.normalizePopupSettings
+      : (sheetSettings, storedDefaults, fallback) => ({
+          color: sheetSettings?.color ?? storedDefaults?.color ?? fallback.defaultColor,
+          rowLineColor:
+            sheetSettings?.rowLineColor ??
+            storedDefaults?.rowLineColor ??
+            sheetSettings?.color ??
+            storedDefaults?.color ??
+            fallback.defaultRowLineColor,
+          colLineColor:
+            sheetSettings?.colLineColor ??
+            storedDefaults?.colLineColor ??
+            sheetSettings?.color ??
+            storedDefaults?.color ??
+            fallback.defaultColLineColor,
+          rowFillColor:
+            sheetSettings?.rowFillColor ??
+            storedDefaults?.rowFillColor ??
+            sheetSettings?.color ??
+            storedDefaults?.color ??
+            fallback.defaultRowFillColor,
+          colFillColor:
+            sheetSettings?.colFillColor ??
+            storedDefaults?.colFillColor ??
+            sheetSettings?.color ??
+            storedDefaults?.color ??
+            fallback.defaultColFillColor,
+          opacity: sheetSettings?.opacity ?? storedDefaults?.opacity ?? fallback.defaultOpacity,
+          row: sheetSettings?.row ?? storedDefaults?.row ?? fallback.defaultRow,
+          column: sheetSettings?.column ?? storedDefaults?.column ?? fallback.defaultColumn,
+          fillRow: sheetSettings?.fillRow ?? storedDefaults?.fillRow ?? fallback.defaultFillRow,
+          fillCol: sheetSettings?.fillCol ?? storedDefaults?.fillCol ?? fallback.defaultFillCol,
+          lineSize: sheetSettings?.lineSize ?? storedDefaults?.lineSize ?? fallback.defaultLineSize,
+          rowFillOpacity:
+            sheetSettings?.rowFillOpacity ??
+            sheetSettings?.cellOpacity ??
+            storedDefaults?.rowFillOpacity ??
+            storedDefaults?.cellOpacity ??
+            fallback.defaultRowFillOpacity,
+          colFillOpacity:
+            sheetSettings?.colFillOpacity ??
+            sheetSettings?.cellOpacity ??
+            storedDefaults?.colFillOpacity ??
+            storedDefaults?.cellOpacity ??
+            fallback.defaultColFillOpacity,
         })
 
   const customColors = [
@@ -184,7 +214,7 @@ window.addEventListener('load', () => {
 
   resetButton.addEventListener('click', () => {
     chrome.storage.local.get(['defaultSettings'], (items) => {
-      const resetSettings = getResetSettings(items.defaultSettings, fallbackDefaults)
+      const resetSettings = normalizePopupSettings(undefined, items.defaultSettings, fallbackDefaults)
 
       huebees.forEach(({ hueb }) => hueb.off('change', save))
 
@@ -246,26 +276,24 @@ window.addEventListener('load', () => {
     chrome.storage.local.get(['sheetSettings', 'defaultSettings'], (items) => {
       const allSettings = items.sheetSettings || {}
       const defaultSettings = items.defaultSettings || {}
-      const current = allSettings[sheetKey] ?? defaultSettings
+      const current = normalizePopupSettings(
+        allSettings[sheetKey],
+        defaultSettings,
+        fallbackDefaults
+      )
 
-      const baseColor = current.color ?? defaultColor
-      const currentRowFillOpacity =
-        current.rowFillOpacity ?? current.cellOpacity ?? defaultRowFillOpacity
-      const currentColFillOpacity =
-        current.colFillOpacity ?? current.cellOpacity ?? defaultColFillOpacity
-
-      huebRowLine.setColor(current.rowLineColor ?? baseColor)
-      huebColLine.setColor(current.colLineColor ?? baseColor)
-      huebRowFill.setColor(current.rowFillColor ?? baseColor)
-      huebColFill.setColor(current.colFillColor ?? baseColor)
-      opacityInput.value = current.opacity ?? defaultOpacity
-      rowInput.checked = current.row ?? defaultRow
-      columnInput.checked = current.column ?? defaultColumn
-      fillRowInput.checked = current.fillRow ?? defaultFillRow
-      fillColInput.checked = current.fillCol ?? defaultFillCol
-      lineSizeInput.value = current.lineSize ?? defaultLineSize
-      rowOpacityInput.value = String(currentRowFillOpacity)
-      colOpacityInput.value = String(currentColFillOpacity)
+      huebRowLine.setColor(current.rowLineColor)
+      huebColLine.setColor(current.colLineColor)
+      huebRowFill.setColor(current.rowFillColor)
+      huebColFill.setColor(current.colFillColor)
+      opacityInput.value = current.opacity
+      rowInput.checked = current.row
+      columnInput.checked = current.column
+      fillRowInput.checked = current.fillRow
+      fillColInput.checked = current.fillCol
+      lineSizeInput.value = current.lineSize
+      rowOpacityInput.value = String(current.rowFillOpacity)
+      colOpacityInput.value = String(current.colFillOpacity)
 
       huebees.forEach(({ hueb }) => hueb.on('change', save))
       opacityInput.addEventListener('change', () => void save())

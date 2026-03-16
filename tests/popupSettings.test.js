@@ -1,7 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { getResetSettings } = require('../scripts/popupSettings.js')
+const { getResetSettings, normalizePopupSettings } = require('../scripts/popupSettings.js')
 
 const fallbackDefaults = {
   defaultColor: '#c2185b',
@@ -55,4 +55,71 @@ test('getResetSettings falls back to hard-coded defaults when user defaults are 
     rowFillOpacity: 0.05,
     colFillOpacity: 0.05,
   })
+})
+
+test('normalizePopupSettings merges partial sheet settings over user defaults', () => {
+  const sheetSettings = {
+    rowLineColor: '#0e65eb',
+    fillRow: false,
+    rowFillOpacity: 0.25,
+  }
+  const userDefaults = {
+    color: '#1565c0',
+    rowLineColor: '#1565c0',
+    colLineColor: '#1b5e20',
+    rowFillColor: '#5c0eec',
+    colFillColor: '#ec930e',
+    opacity: 0.6,
+    row: false,
+    column: true,
+    fillRow: true,
+    fillCol: false,
+    lineSize: 1.5,
+    rowFillOpacity: 0.15,
+    colFillOpacity: 0.2,
+  }
+
+  assert.deepEqual(normalizePopupSettings(sheetSettings, userDefaults, fallbackDefaults), {
+    color: '#1565c0',
+    rowLineColor: '#0e65eb',
+    colLineColor: '#1b5e20',
+    rowFillColor: '#5c0eec',
+    colFillColor: '#ec930e',
+    opacity: 0.6,
+    row: false,
+    column: true,
+    fillRow: false,
+    fillCol: false,
+    lineSize: 1.5,
+    rowFillOpacity: 0.25,
+    colFillOpacity: 0.2,
+  })
+})
+
+test('normalizePopupSettings falls back from cellOpacity when fill opacities are absent', () => {
+  assert.deepEqual(
+    normalizePopupSettings(
+      {
+        color: '#6a1b9a',
+        cellOpacity: 0.3,
+      },
+      undefined,
+      fallbackDefaults
+    ),
+    {
+      color: '#6a1b9a',
+      rowLineColor: '#6a1b9a',
+      colLineColor: '#6a1b9a',
+      rowFillColor: '#6a1b9a',
+      colFillColor: '#6a1b9a',
+      opacity: '0.8',
+      row: true,
+      column: true,
+      fillRow: true,
+      fillCol: true,
+      lineSize: 3.25,
+      rowFillOpacity: 0.3,
+      colFillOpacity: 0.3,
+    }
+  )
 })
