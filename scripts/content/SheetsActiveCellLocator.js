@@ -88,10 +88,10 @@ class SheetsActiveCellLocator {
     const activeSelectionRectList = activeSelectionList.map((element) => {
       const { x, y, width, height } = element.getBoundingClientRect()
       return {
-        x: Math.ceil(x - sheetRect.x),
-        y: Math.ceil(y - sheetRect.y),
-        width: Math.ceil(width),
-        height: Math.ceil(height),
+        x: x - sheetRect.x,
+        y: y - sheetRect.y,
+        width,
+        height,
       }
     })
 
