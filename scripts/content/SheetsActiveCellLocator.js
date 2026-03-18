@@ -90,8 +90,8 @@ class SheetsActiveCellLocator {
       return {
         x: x - sheetRect.x,
         y: y - sheetRect.y,
-        width,
-        height,
+        width: width - 1,
+        height: height - 0.5,
       }
     })
 
