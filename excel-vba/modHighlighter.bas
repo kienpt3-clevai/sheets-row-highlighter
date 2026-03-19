@@ -6,6 +6,8 @@ Public Const SHAPE_PREFIX As String = "RH_"
 ' Track previous highlight to avoid redundant redraws
 Private mLastRow As Long
 Private mLastCol As Long
+Private mLastRowCount As Long
+Private mLastColCount As Long
 Private mLastSheet As String
 
 ' Cached shape references (reuse instead of delete/recreate)
@@ -88,11 +90,15 @@ End Sub
 Public Function HasSelectionChanged(ByVal ws As Worksheet, ByVal target As Range) As Boolean
     Dim sheetName As String
     sheetName = ws.Parent.Name & "!" & ws.Name
-    If target.Row = mLastRow And target.Column = mLastCol And sheetName = mLastSheet Then
+    If target.Row = mLastRow And target.Column = mLastCol And _
+       target.Rows.Count = mLastRowCount And target.Columns.Count = mLastColCount And _
+       sheetName = mLastSheet Then
         HasSelectionChanged = False
     Else
         mLastRow = target.Row
         mLastCol = target.Column
+        mLastRowCount = target.Rows.Count
+        mLastColCount = target.Columns.Count
         mLastSheet = sheetName
         HasSelectionChanged = True
     End If
@@ -117,10 +123,8 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
         Exit Sub
     End If
 
-    ' Get active cell geometry (handle merged cells)
-    Dim mergedArea As Range
-    Set mergedArea = target.MergeArea
-    With mergedArea
+    ' Get selection geometry (covers entire selected range)
+    With target
         rowTop = .Top
         rowHeight = .Height
         rowBottom = rowTop + rowHeight

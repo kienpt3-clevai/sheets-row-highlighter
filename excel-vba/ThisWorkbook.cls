@@ -13,12 +13,9 @@ Attribute VB_Exposed = True
 ' ============================================================
 Option Explicit
 
-Private mAppEvents As clsAppEvents
-
 Private Sub Workbook_Open()
     modSettings.LoadSettings
-    Set mAppEvents = New clsAppEvents
-    Set mAppEvents.App = Application
+    modSettings.InitEventHandler
 
     ' Register keyboard shortcuts
     Application.OnKey "^+r", "modHighlighter.ToggleRowLine"    ' Ctrl+Shift+R
