@@ -242,7 +242,7 @@ End Sub
 ' --- Quick toggles (callable from shortcuts) ---
 Public Sub ToggleRowLine()
     Dim newState As Boolean
-    newState = Not (modSettings.RowLineEnabled And modSettings.RowFillEnabled)
+    newState = Not (modSettings.RowLineEnabled Or modSettings.RowFillEnabled)
     modSettings.RowLineEnabled = newState
     modSettings.RowFillEnabled = newState
     modSettings.SaveSettings
@@ -251,7 +251,7 @@ End Sub
 
 Public Sub ToggleColLine()
     Dim newState As Boolean
-    newState = Not (modSettings.ColLineEnabled And modSettings.ColFillEnabled)
+    newState = Not (modSettings.ColLineEnabled Or modSettings.ColFillEnabled)
     modSettings.ColLineEnabled = newState
     modSettings.ColFillEnabled = newState
     modSettings.SaveSettings
@@ -260,7 +260,7 @@ End Sub
 
 Public Sub ToggleAll()
     Dim newState As Boolean
-    newState = Not (modSettings.RowLineEnabled And modSettings.ColLineEnabled)
+    newState = Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled Or modSettings.RowFillEnabled Or modSettings.ColFillEnabled)
     modSettings.RowLineEnabled = newState
     modSettings.ColLineEnabled = newState
     modSettings.RowFillEnabled = newState

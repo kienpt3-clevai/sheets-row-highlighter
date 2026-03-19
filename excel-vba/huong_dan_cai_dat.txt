@@ -1,0 +1,89 @@
+========================================================
+  EXCEL ROW HIGHLIGHTER - HUONG DAN CAI DAT
+========================================================
+
+Highlight dong va cot dang chon trong Excel (tuong tu
+Google Sheets Row Highlighter extension).
+
+Tinh nang:
+  - Row Line: duong vien tren/duoi dong
+  - Col Line: duong vien trai/phai cot
+  - Row Fill: to mau mo dong
+  - Col Fill: to mau mo cot
+  - Ho tro chon nhieu o
+  - Ho tro merged cells
+  - Tu dong chay tren moi file Excel
+
+========================================================
+  CAI DAT (3 BUOC)
+========================================================
+
+BUOC 1: Bat quyen VBA
+  - Mo Excel
+  - File > Options > Trust Center > Trust Center Settings
+  - Muc "Macro Settings":
+    + Tick "Trust access to the VBA project object model"
+  - Nhan OK
+
+BUOC 2: Tao PERSONAL.XLSB (neu chua co)
+  - Tab Developer > Record Macro
+    (Neu khong thay tab Developer:
+     File > Options > Customize Ribbon > tick Developer > OK)
+  - Trong dialog "Record Macro":
+    + Store macro in: chon "Personal Macro Workbook"
+    + Nhan OK
+  - Ngay lap tuc nhan Stop Recording (thanh status bar phia duoi)
+
+BUOC 3: Cai dat
+  - Nhan Alt+F11 (mo VBA Editor)
+  - Right-click bat ky project nao > Import File...
+  - Chon file: modInstaller.bas
+  - Nhan Ctrl+G (mo Immediate Window)
+  - Go lenh:  Call modInstaller.Install
+  - Nhan Enter
+  - Dong Excel hoan toan, mo lai Excel
+  - XONG!
+
+========================================================
+  PHIM TAT
+========================================================
+
+  Ctrl+Shift+R    Toggle dong (row line + row fill)
+  Ctrl+Shift+C    Toggle cot (col line + col fill)
+  Ctrl+Shift+A    Toggle tat ca on/off
+  Ctrl+Shift+H    Mo cua so Settings
+
+========================================================
+  SETTINGS
+========================================================
+
+Nhan Ctrl+Shift+H de mo cua so cai dat:
+  - Row Line / Col Line: bat/tat duong vien, chinh size
+  - Row Fill / Col Fill: bat/tat to mau, chinh opacity
+  - Moi loai co nut chon mau rieng
+  - "Apply & Close": ap dung va dong
+  - "Save Default": luu cai dat hien tai lam mac dinh
+  - "Reset Defaults": quay ve mac dinh da luu
+
+========================================================
+  GO CAI DAT
+========================================================
+
+  - Nhan Alt+F11 (mo VBA Editor)
+  - Nhan Ctrl+G (Immediate Window)
+  - Go lenh:  Call modInstaller.Uninstall
+  - Nhan Enter
+  - Dong mo lai Excel
+
+========================================================
+  LUU Y
+========================================================
+
+  - Highlight chi cap nhat khi chon o moi (khong cap nhat
+    khi scroll ma khong chon o)
+  - Ctrl+Z co the undo thao tac shape thay vi thao tac
+    cua ban (han che cua VBA)
+  - Tren sheet duoc bao ve (protected), highlight se tu
+    dong bo qua
+  - File modInstaller.bas chua toan bo code, chi can 1
+    file nay de cai dat tren may moi

@@ -514,19 +514,19 @@ Private Function GetModHighlighterCode() As String
     c = c & "End Sub" & vbCrLf & vbCrLf
     c = c & "Public Sub ToggleRowLine()" & vbCrLf
     c = c & "    Dim s As Boolean" & vbCrLf
-    c = c & "    s = Not (modSettings.RowLineEnabled And modSettings.RowFillEnabled)" & vbCrLf
+    c = c & "    s = Not (modSettings.RowLineEnabled Or modSettings.RowFillEnabled)" & vbCrLf
     c = c & "    modSettings.RowLineEnabled = s: modSettings.RowFillEnabled = s" & vbCrLf
     c = c & "    modSettings.SaveSettings: RefreshHighlight" & vbCrLf
     c = c & "End Sub" & vbCrLf & vbCrLf
     c = c & "Public Sub ToggleColLine()" & vbCrLf
     c = c & "    Dim s As Boolean" & vbCrLf
-    c = c & "    s = Not (modSettings.ColLineEnabled And modSettings.ColFillEnabled)" & vbCrLf
+    c = c & "    s = Not (modSettings.ColLineEnabled Or modSettings.ColFillEnabled)" & vbCrLf
     c = c & "    modSettings.ColLineEnabled = s: modSettings.ColFillEnabled = s" & vbCrLf
     c = c & "    modSettings.SaveSettings: RefreshHighlight" & vbCrLf
     c = c & "End Sub" & vbCrLf & vbCrLf
     c = c & "Public Sub ToggleAll()" & vbCrLf
     c = c & "    Dim s As Boolean" & vbCrLf
-    c = c & "    s = Not (modSettings.RowLineEnabled And modSettings.ColLineEnabled)" & vbCrLf
+    c = c & "    s = Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled Or modSettings.RowFillEnabled Or modSettings.ColFillEnabled)" & vbCrLf
     c = c & "    modSettings.RowLineEnabled = s: modSettings.ColLineEnabled = s" & vbCrLf
     c = c & "    modSettings.RowFillEnabled = s: modSettings.ColFillEnabled = s" & vbCrLf
     c = c & "    modSettings.SaveSettings: RefreshHighlight" & vbCrLf
