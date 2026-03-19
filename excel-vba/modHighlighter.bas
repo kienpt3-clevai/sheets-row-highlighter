@@ -8,17 +8,80 @@ Private mLastRow As Long
 Private mLastCol As Long
 Private mLastSheet As String
 
+' Cached shape references (reuse instead of delete/recreate)
+Private mSheet As Worksheet
+Private mRowFill As Shape
+Private mColFill As Shape
+Private mRowLineTop As Shape
+Private mRowLineBot As Shape
+Private mColLineLeft As Shape
+Private mColLineRight As Shape
+
+' --- Get or create a named rectangle shape ---
+Private Function GetOrCreateRect(ByVal ws As Worksheet, ByVal sName As String) As Shape
+    On Error Resume Next
+    Set GetOrCreateRect = ws.Shapes(sName)
+    On Error GoTo 0
+    If GetOrCreateRect Is Nothing Then
+        Set GetOrCreateRect = ws.Shapes.AddShape(msoShapeRectangle, 0, 0, 10, 10)
+        GetOrCreateRect.Name = sName
+        GetOrCreateRect.Placement = xlFreeFloating
+    End If
+End Function
+
+' --- Get or create a named line shape ---
+Private Function GetOrCreateLine(ByVal ws As Worksheet, ByVal sName As String) As Shape
+    On Error Resume Next
+    Set GetOrCreateLine = ws.Shapes(sName)
+    On Error GoTo 0
+    If GetOrCreateLine Is Nothing Then
+        Set GetOrCreateLine = ws.Shapes.AddLine(0, 0, 1, 1)
+        GetOrCreateLine.Name = sName
+        GetOrCreateLine.Placement = xlFreeFloating
+    End If
+End Function
+
+' --- Ensure cached shapes exist on the given sheet ---
+Private Sub EnsureShapes(ByVal ws As Worksheet)
+    ' If sheet changed, invalidate cache
+    If Not mSheet Is ws Then
+        Set mSheet = ws
+        Set mRowFill = Nothing
+        Set mColFill = Nothing
+        Set mRowLineTop = Nothing
+        Set mRowLineBot = Nothing
+        Set mColLineLeft = Nothing
+        Set mColLineRight = Nothing
+    End If
+
+    If mRowFill Is Nothing Then Set mRowFill = GetOrCreateRect(ws, SHAPE_PREFIX & "RowFill")
+    If mColFill Is Nothing Then Set mColFill = GetOrCreateRect(ws, SHAPE_PREFIX & "ColFill")
+    If mRowLineTop Is Nothing Then Set mRowLineTop = GetOrCreateLine(ws, SHAPE_PREFIX & "RowLineTop")
+    If mRowLineBot Is Nothing Then Set mRowLineBot = GetOrCreateLine(ws, SHAPE_PREFIX & "RowLineBot")
+    If mColLineLeft Is Nothing Then Set mColLineLeft = GetOrCreateLine(ws, SHAPE_PREFIX & "ColLineLeft")
+    If mColLineRight Is Nothing Then Set mColLineRight = GetOrCreateLine(ws, SHAPE_PREFIX & "ColLineRight")
+End Sub
+
 ' --- Delete all RH_* shapes from the given sheet ---
 Public Sub ClearHighlights(ByVal ws As Worksheet)
-    Dim shp As Shape
     Dim i As Long
-    ' Iterate backwards to safely delete
+    Application.ScreenUpdating = False
+    On Error Resume Next
     For i = ws.Shapes.Count To 1 Step -1
-        Set shp = ws.Shapes(i)
-        If Left$(shp.Name, Len(SHAPE_PREFIX)) = SHAPE_PREFIX Then
-            shp.Delete
+        If Left$(ws.Shapes(i).Name, Len(SHAPE_PREFIX)) = SHAPE_PREFIX Then
+            ws.Shapes(i).Delete
         End If
     Next i
+    On Error GoTo 0
+    ' Invalidate cache
+    Set mSheet = Nothing
+    Set mRowFill = Nothing
+    Set mColFill = Nothing
+    Set mRowLineTop = Nothing
+    Set mRowLineBot = Nothing
+    Set mColLineLeft = Nothing
+    Set mColLineRight = Nothing
+    Application.ScreenUpdating = True
 End Sub
 
 ' --- Check if selection actually changed (avoid redundant redraws) ---
@@ -43,20 +106,16 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
     If ws.ProtectDrawingObjects Then Exit Sub
 
     Dim visRange As Range
-    Dim cellRow As Long, cellCol As Long
     Dim rowTop As Double, rowBottom As Double, rowHeight As Double
     Dim colLeft As Double, colRight As Double, colWidth As Double
     Dim visLeft As Double, visTop As Double, visRight As Double, visBottom As Double
-    Dim shp As Shape
 
     ' Skip if nothing enabled
     If Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled Or _
             modSettings.RowFillEnabled Or modSettings.ColFillEnabled) Then
+        HideAllShapes ws
         Exit Sub
     End If
-
-    cellRow = target.Row
-    cellCol = target.Column
 
     ' Get active cell geometry (handle merged cells)
     Dim mergedArea As Range
@@ -81,81 +140,99 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
 
     Application.ScreenUpdating = False
 
+    ' Ensure all cached shapes exist
+    EnsureShapes ws
+
     ' --- Row Fill ---
     If modSettings.RowFillEnabled And modSettings.RowFillOpacity > 0 Then
-        Set shp = ws.Shapes.AddShape(msoShapeRectangle, _
-            visLeft, rowTop, visRight - visLeft, rowHeight)
-        With shp
-            .Name = SHAPE_PREFIX & "RowFill"
+        With mRowFill
+            .Left = visLeft
+            .Top = rowTop
+            .Width = visRight - visLeft
+            .Height = rowHeight
             .Fill.ForeColor.RGB = modSettings.RowFillColor
             .Fill.Transparency = 1# - modSettings.RowFillOpacity
             .Line.Visible = msoFalse
-            .Placement = xlFreeFloating
+            .Visible = msoTrue
         End With
+    Else
+        mRowFill.Visible = msoFalse
     End If
 
     ' --- Col Fill ---
     If modSettings.ColFillEnabled And modSettings.ColFillOpacity > 0 Then
-        Set shp = ws.Shapes.AddShape(msoShapeRectangle, _
-            colLeft, visTop, colWidth, visBottom - visTop)
-        With shp
-            .Name = SHAPE_PREFIX & "ColFill"
+        With mColFill
+            .Left = colLeft
+            .Top = visTop
+            .Width = colWidth
+            .Height = visBottom - visTop
             .Fill.ForeColor.RGB = modSettings.ColFillColor
             .Fill.Transparency = 1# - modSettings.ColFillOpacity
             .Line.Visible = msoFalse
-            .Placement = xlFreeFloating
+            .Visible = msoTrue
         End With
+    Else
+        mColFill.Visible = msoFalse
     End If
 
     ' --- Row Lines (top + bottom) ---
     If modSettings.RowLineEnabled Then
-        ' Top line
-        Set shp = ws.Shapes.AddLine( _
-            visLeft, rowTop, visRight, rowTop)
-        FormatLineShape shp, SHAPE_PREFIX & "RowLineTop", _
+        PositionLine mRowLineTop, visLeft, rowTop, visRight, rowTop, _
             modSettings.RowLineColor, modSettings.RowLineSize
-
-        ' Bottom line
-        Set shp = ws.Shapes.AddLine( _
-            visLeft, rowBottom, visRight, rowBottom)
-        FormatLineShape shp, SHAPE_PREFIX & "RowLineBottom", _
+        PositionLine mRowLineBot, visLeft, rowBottom, visRight, rowBottom, _
             modSettings.RowLineColor, modSettings.RowLineSize
+    Else
+        mRowLineTop.Visible = msoFalse
+        mRowLineBot.Visible = msoFalse
     End If
 
     ' --- Col Lines (left + right) ---
     If modSettings.ColLineEnabled Then
-        ' Left line
-        Set shp = ws.Shapes.AddLine( _
-            colLeft, visTop, colLeft, visBottom)
-        FormatLineShape shp, SHAPE_PREFIX & "ColLineLeft", _
+        PositionLine mColLineLeft, colLeft, visTop, colLeft, visBottom, _
             modSettings.ColLineColor, modSettings.ColLineSize
-
-        ' Right line
-        Set shp = ws.Shapes.AddLine( _
-            colRight, visTop, colRight, visBottom)
-        FormatLineShape shp, SHAPE_PREFIX & "ColLineRight", _
+        PositionLine mColLineRight, colRight, visTop, colRight, visBottom, _
             modSettings.ColLineColor, modSettings.ColLineSize
+    Else
+        mColLineLeft.Visible = msoFalse
+        mColLineRight.Visible = msoFalse
     End If
 
     Application.ScreenUpdating = True
     Exit Sub
 
 ErrHandler:
-    ' Silently fail - don't break user's workflow
     Application.ScreenUpdating = True
     Debug.Print "RH DrawHighlights Error: " & Err.Description
 End Sub
 
-' --- Format a line shape ---
-Private Sub FormatLineShape(ByVal shp As Shape, ByVal shapeName As String, _
-                            ByVal lineColor As Long, ByVal lineWeight As Double)
+' --- Reposition and style a line shape ---
+Private Sub PositionLine(ByVal shp As Shape, _
+    ByVal x1 As Double, ByVal y1 As Double, _
+    ByVal x2 As Double, ByVal y2 As Double, _
+    ByVal lineColor As Long, ByVal lineWeight As Double)
     With shp
-        .Name = shapeName
+        .Left = IIf(x1 < x2, x1, x2)
+        .Top = IIf(y1 < y2, y1, y2)
+        .Width = Abs(x2 - x1)
+        .Height = Abs(y2 - y1)
         .Line.ForeColor.RGB = lineColor
         .Line.Weight = lineWeight
         .Line.Visible = msoTrue
-        .Placement = xlFreeFloating
+        .Visible = msoTrue
     End With
+End Sub
+
+' --- Hide all cached shapes ---
+Private Sub HideAllShapes(ByVal ws As Worksheet)
+    On Error Resume Next
+    EnsureShapes ws
+    mRowFill.Visible = msoFalse
+    mColFill.Visible = msoFalse
+    mRowLineTop.Visible = msoFalse
+    mRowLineBot.Visible = msoFalse
+    mColLineLeft.Visible = msoFalse
+    mColLineRight.Visible = msoFalse
+    On Error GoTo 0
 End Sub
 
 ' --- Quick toggles (callable from shortcuts) ---
