@@ -456,10 +456,14 @@ Private Function GetModHighlighterCode() As String
     c = c & "        colLeft = .Left: colWidth = .Width: colRight = colLeft + colWidth" & vbCrLf
     c = c & "    End With" & vbCrLf
     c = c & "    Set visRange = Application.ActiveWindow.VisibleRange" & vbCrLf
-    c = c & "    With visRange" & vbCrLf
-    c = c & "        visLeft = .Left: visTop = .Top" & vbCrLf
-    c = c & "        visRight = .Left + .Width: visBottom = .Top + .Height" & vbCrLf
-    c = c & "    End With" & vbCrLf
+    c = c & "    Dim area As Range" & vbCrLf
+    c = c & "    visLeft = 9999999#: visTop = 9999999#: visRight = 0#: visBottom = 0#" & vbCrLf
+    c = c & "    For Each area In visRange.Areas" & vbCrLf
+    c = c & "        If area.Left < visLeft Then visLeft = area.Left" & vbCrLf
+    c = c & "        If area.Top < visTop Then visTop = area.Top" & vbCrLf
+    c = c & "        If area.Left + area.Width > visRight Then visRight = area.Left + area.Width" & vbCrLf
+    c = c & "        If area.Top + area.Height > visBottom Then visBottom = area.Top + area.Height" & vbCrLf
+    c = c & "    Next area" & vbCrLf
     c = c & "    Application.ScreenUpdating = False" & vbCrLf
     c = c & "    EnsureShapes ws" & vbCrLf
     c = c & "    If modSettings.RowFillEnabled And modSettings.RowFillOpacity > 0 Then" & vbCrLf
