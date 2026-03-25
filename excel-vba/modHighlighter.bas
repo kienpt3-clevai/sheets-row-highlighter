@@ -1,7 +1,9 @@
-Attribute VB_Name = "modHighlighter"
 Option Explicit
 
+' === Shapes for lines + CF for fills (fills work in freeze panes) ===
 Private Const SHAPE_PREFIX As String = "RH_"
+Private Const CF_ROW_TAG As String = "=AND(ROW()>="
+Private Const CF_COL_TAG As String = "=AND(COLUMN()>="
 
 Private mLastRow As Long
 Private mLastCol As Long
@@ -14,6 +16,8 @@ Private mRowLineTop As Shape
 Private mRowLineBot As Shape
 Private mColLineLeft As Shape
 Private mColLineRight As Shape
+
+' ======== SHAPE HELPERS ========
 
 Private Function GetOrCreateLine(ByVal ws As Worksheet, ByVal sName As String) As Shape
     On Error Resume Next
@@ -56,7 +60,79 @@ Private Sub PosLine(ByVal shp As Shape, _
     End With
 End Sub
 
+' ======== CF FILL HELPERS ========
+
+Private Function BlendColor(ByVal baseColor As Long, ByVal opacity As Double) As Long
+    Dim r As Long, g As Long, b As Long
+    r = baseColor And &HFF
+    g = (baseColor \ &H100) And &HFF
+    b = (baseColor \ &H10000) And &HFF
+    BlendColor = RGB(CLng(255 - (255 - r) * opacity), _
+                     CLng(255 - (255 - g) * opacity), _
+                     CLng(255 - (255 - b) * opacity))
+End Function
+
+Private Sub ClearCFRules(ByVal ws As Worksheet)
+    Dim i As Long
+    Dim fc As Object
+    Dim formula As String
+    On Error Resume Next
+    For i = ws.Cells(1, 1).FormatConditions.Count To 1 Step -1
+        Set fc = ws.Cells(1, 1).FormatConditions(i)
+        formula = ""
+        formula = fc.Formula1
+        If Len(formula) > 0 Then
+            If Left$(formula, Len(CF_ROW_TAG)) = CF_ROW_TAG Or _
+               Left$(formula, Len(CF_COL_TAG)) = CF_COL_TAG Then
+                fc.Delete
+            End If
+        End If
+    Next i
+    On Error GoTo 0
+End Sub
+
+Private Sub DrawCFFills(ByVal ws As Worksheet, ByVal target As Range)
+    Dim targetRow As Long, targetRowEnd As Long
+    Dim targetCol As Long, targetColEnd As Long
+    targetRow = target.Row
+    targetCol = target.Column
+    targetRowEnd = targetRow + target.Rows.Count - 1
+    targetColEnd = targetCol + target.Columns.Count - 1
+
+    On Error Resume Next
+
+    If modSettings.RowFillEnabled And modSettings.RowFillOpacity > 0 Then
+        Dim rowF As String
+        rowF = CF_ROW_TAG & targetRow & ",ROW()<=" & targetRowEnd & ")"
+        Dim fcR As FormatCondition
+        Set fcR = ws.Cells.FormatConditions.Add(xlExpression, , rowF)
+        If Not fcR Is Nothing Then
+            fcR.StopIfTrue = False
+            fcR.Interior.Color = BlendColor(modSettings.RowFillColor, modSettings.RowFillOpacity)
+        End If
+    End If
+
+    If modSettings.ColFillEnabled And modSettings.ColFillOpacity > 0 Then
+        Dim colF As String
+        colF = CF_COL_TAG & targetCol & ",COLUMN()<=" & targetColEnd & ")"
+        Dim fcC As FormatCondition
+        Set fcC = ws.Cells.FormatConditions.Add(xlExpression, , colF)
+        If Not fcC Is Nothing Then
+            fcC.StopIfTrue = False
+            fcC.Interior.Color = BlendColor(modSettings.ColFillColor, modSettings.ColFillOpacity)
+        End If
+    End If
+
+    On Error GoTo 0
+End Sub
+
+' ======== PUBLIC API ========
+
 Public Sub ClearHighlights(ByVal ws As Worksheet)
+    ' Clear CF fills (separate error handling)
+    ClearCFRules ws
+
+    ' Clear shapes
     On Error Resume Next
     Dim i As Long
     For i = ws.Shapes.Count To 1 Step -1
@@ -65,6 +141,7 @@ Public Sub ClearHighlights(ByVal ws As Worksheet)
         End If
     Next i
     On Error GoTo 0
+
     Set mSheet = Nothing
     Set mRowLineTop = Nothing
     Set mRowLineBot = Nothing
@@ -90,14 +167,29 @@ Public Function HasSelectionChanged(ByVal ws As Worksheet, ByVal target As Range
 End Function
 
 Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
-    On Error GoTo ErrHandler
+    If Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled Or _
+            modSettings.RowFillEnabled Or modSettings.ColFillEnabled) Then
+        ClearHighlights ws
+        Exit Sub
+    End If
 
-    If ws.ProtectDrawingObjects Then Exit Sub
+    Application.ScreenUpdating = False
+
+    ' --- CF fills (tach rieng, loi khong anh huong shapes) ---
+    ClearCFRules ws
+    If modSettings.RowFillEnabled Or modSettings.ColFillEnabled Then
+        DrawCFFills ws, target
+    End If
+
+    ' --- Shape lines ---
+    On Error GoTo LineErr
 
     If Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled) Then
         HideAllShapes ws
-        Exit Sub
+        GoTo Done
     End If
+
+    If ws.ProtectDrawingObjects Then GoTo Done
 
     Dim visRange As Range
     Set visRange = Application.ActiveWindow.VisibleRange
@@ -120,7 +212,6 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
         colRight = colLeft + .Width
     End With
 
-    Application.ScreenUpdating = False
     EnsureShapes ws
 
     If modSettings.RowLineEnabled Then
@@ -143,9 +234,10 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
         mColLineRight.Visible = msoFalse
     End If
 
+Done:
     Application.ScreenUpdating = True
     Exit Sub
-ErrHandler:
+LineErr:
     Application.ScreenUpdating = True
 End Sub
 
@@ -159,23 +251,34 @@ Private Sub HideAllShapes(ByVal ws As Worksheet)
     On Error GoTo 0
 End Sub
 
+' ======== TOGGLES ========
+
 Public Sub ToggleRowLine()
-    modSettings.RowLineEnabled = Not modSettings.RowLineEnabled
+    Dim s As Boolean
+    s = Not (modSettings.RowLineEnabled Or modSettings.RowFillEnabled)
+    modSettings.RowLineEnabled = s
+    modSettings.RowFillEnabled = s
     modSettings.SaveSettings
     RefreshHighlight
 End Sub
 
 Public Sub ToggleColLine()
-    modSettings.ColLineEnabled = Not modSettings.ColLineEnabled
+    Dim s As Boolean
+    s = Not (modSettings.ColLineEnabled Or modSettings.ColFillEnabled)
+    modSettings.ColLineEnabled = s
+    modSettings.ColFillEnabled = s
     modSettings.SaveSettings
     RefreshHighlight
 End Sub
 
 Public Sub ToggleAll()
-    Dim newState As Boolean
-    newState = Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled)
-    modSettings.RowLineEnabled = newState
-    modSettings.ColLineEnabled = newState
+    Dim s As Boolean
+    s = Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled Or _
+             modSettings.RowFillEnabled Or modSettings.ColFillEnabled)
+    modSettings.RowLineEnabled = s
+    modSettings.ColLineEnabled = s
+    modSettings.RowFillEnabled = s
+    modSettings.ColFillEnabled = s
     modSettings.SaveSettings
     RefreshHighlight
 End Sub
