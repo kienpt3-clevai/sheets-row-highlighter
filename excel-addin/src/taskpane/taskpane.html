@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Row Highlighter</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 13px;
+      padding: 12px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h2 {
+      font-size: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-on { color: #2e7d32; font-weight: bold; }
+    .status-off { color: #c62828; font-weight: bold; }
+
+    .toggle-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #1976d2;
+      color: white;
+      transition: background 0.2s;
+    }
+    .toggle-btn:hover { background: #1565c0; }
+
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .row:last-child { margin-bottom: 0; }
+
+    .row label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .row label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+
+    input[type="color"] {
+      width: 36px;
+      height: 28px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+    }
+
+    .opacity-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .opacity-value {
+      font-size: 12px;
+      color: #666;
+      min-width: 32px;
+    }
+
+    .info {
+      font-size: 11px;
+      color: #999;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h2>Row Highlighter <span id="status" class="status-on">ON</span></h2>
+
+  <button id="btnToggle" class="toggle-btn">Toggle Highlight</button>
+
+  <div class="section">
+    <div class="section-title">Row Line</div>
+    <div class="row">
+      <label><input type="checkbox" id="chkRowLine" checked/> Enable</label>
+      <input type="color" id="rowLineColor" value="#c2185b"/>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Column Line</div>
+    <div class="row">
+      <label><input type="checkbox" id="chkColLine" checked/> Enable</label>
+      <input type="color" id="colLineColor" value="#3399ff"/>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Row Fill</div>
+    <div class="row">
+      <label><input type="checkbox" id="chkRowFill" checked/> Enable</label>
+      <input type="color" id="rowFillColor" value="#c2185b"/>
+    </div>
+    <div class="opacity-row">
+      <span style="font-size:12px">Opacity:</span>
+      <input type="range" id="rowFillOpacity" min="0.01" max="0.5" step="0.01" value="0.15"/>
+      <span class="opacity-value" id="opacityValue">0.15</span>
+    </div>
+  </div>
+
+  <div class="info">
+    Row Fill uses Conditional Formatting (visible in freeze panes).<br/>
+    Row/Col Lines use cell borders (may affect undo).<br/>
+    Highlights auto-clear on save.
+  </div>
+</body>
+</html>
