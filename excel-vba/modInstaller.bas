@@ -365,66 +365,44 @@ End Function
 Private Function GetModHighlighterCode() As String
     Dim c As String
     c = "Option Explicit" & vbCrLf & vbCrLf
-    c = c & "Public Const SHAPE_PREFIX As String = ""RH_""" & vbCrLf & vbCrLf
+    c = c & "Private Const CF_ROW_PREFIX As String = ""=AND(ROW()>=""" & vbCrLf
+    c = c & "Private Const CF_COL_PREFIX As String = ""=AND(COLUMN()>=""" & vbCrLf
+    c = c & "Private Const SHAPE_PREFIX As String = ""RH_""" & vbCrLf & vbCrLf
     c = c & "Private mLastRow As Long" & vbCrLf
     c = c & "Private mLastCol As Long" & vbCrLf
     c = c & "Private mLastRowCount As Long" & vbCrLf
     c = c & "Private mLastColCount As Long" & vbCrLf
     c = c & "Private mLastSheet As String" & vbCrLf & vbCrLf
-    c = c & "Private mSheet As Worksheet" & vbCrLf
-    c = c & "Private mRowFill As Shape" & vbCrLf
-    c = c & "Private mColFill As Shape" & vbCrLf
-    c = c & "Private mRowLineTop As Shape" & vbCrLf
-    c = c & "Private mRowLineBot As Shape" & vbCrLf
-    c = c & "Private mColLineLeft As Shape" & vbCrLf
-    c = c & "Private mColLineRight As Shape" & vbCrLf & vbCrLf
-    c = c & "Private Function GetOrCreateRect(ByVal ws As Worksheet, ByVal sName As String) As Shape" & vbCrLf
-    c = c & "    On Error Resume Next" & vbCrLf
-    c = c & "    Set GetOrCreateRect = ws.Shapes(sName)" & vbCrLf
-    c = c & "    On Error GoTo 0" & vbCrLf
-    c = c & "    If GetOrCreateRect Is Nothing Then" & vbCrLf
-    c = c & "        Set GetOrCreateRect = ws.Shapes.AddShape(msoShapeRectangle, 0, 0, 10, 10)" & vbCrLf
-    c = c & "        GetOrCreateRect.Name = sName" & vbCrLf
-    c = c & "        GetOrCreateRect.Placement = xlFreeFloating" & vbCrLf
+    c = c & "Private Function BlendColor(ByVal baseColor As Long, ByVal opacity As Double) As Long" & vbCrLf
+    c = c & "    Dim r As Long, g As Long, b As Long" & vbCrLf
+    c = c & "    r = baseColor And &HFF" & vbCrLf
+    c = c & "    g = (baseColor \ &H100) And &HFF" & vbCrLf
+    c = c & "    b = (baseColor \ &H10000) And &HFF" & vbCrLf
+    c = c & "    BlendColor = RGB(CLng(255 - (255 - r) * opacity), CLng(255 - (255 - g) * opacity), CLng(255 - (255 - b) * opacity))" & vbCrLf
+    c = c & "End Function" & vbCrLf & vbCrLf
+    c = c & "Private Function SizeToWeight(ByVal sz As Double) As Long" & vbCrLf
+    c = c & "    If sz <= 1 Then: SizeToWeight = xlHairline" & vbCrLf
+    c = c & "    ElseIf sz <= 2 Then: SizeToWeight = xlThin" & vbCrLf
+    c = c & "    ElseIf sz <= 3 Then: SizeToWeight = xlMedium" & vbCrLf
+    c = c & "    Else: SizeToWeight = xlThick" & vbCrLf
     c = c & "    End If" & vbCrLf
     c = c & "End Function" & vbCrLf & vbCrLf
-    c = c & "Private Function GetOrCreateLine(ByVal ws As Worksheet, ByVal sName As String) As Shape" & vbCrLf
-    c = c & "    On Error Resume Next" & vbCrLf
-    c = c & "    Set GetOrCreateLine = ws.Shapes(sName)" & vbCrLf
-    c = c & "    On Error GoTo 0" & vbCrLf
-    c = c & "    If GetOrCreateLine Is Nothing Then" & vbCrLf
-    c = c & "        Set GetOrCreateLine = ws.Shapes.AddLine(0, 0, 1, 1)" & vbCrLf
-    c = c & "        GetOrCreateLine.Name = sName" & vbCrLf
-    c = c & "        GetOrCreateLine.Placement = xlFreeFloating" & vbCrLf
-    c = c & "    End If" & vbCrLf
+    c = c & "Private Function IsRHFormula(ByVal formula As String) As Boolean" & vbCrLf
+    c = c & "    IsRHFormula = (Left$(formula, Len(CF_ROW_PREFIX)) = CF_ROW_PREFIX) Or _" & vbCrLf
+    c = c & "                  (Left$(formula, Len(CF_COL_PREFIX)) = CF_COL_PREFIX)" & vbCrLf
     c = c & "End Function" & vbCrLf & vbCrLf
-    c = c & "Private Sub EnsureShapes(ByVal ws As Worksheet)" & vbCrLf
-    c = c & "    If Not mSheet Is ws Then" & vbCrLf
-    c = c & "        Set mSheet = ws" & vbCrLf
-    c = c & "        Set mRowFill = Nothing: Set mColFill = Nothing" & vbCrLf
-    c = c & "        Set mRowLineTop = Nothing: Set mRowLineBot = Nothing" & vbCrLf
-    c = c & "        Set mColLineLeft = Nothing: Set mColLineRight = Nothing" & vbCrLf
-    c = c & "    End If" & vbCrLf
-    c = c & "    If mRowFill Is Nothing Then Set mRowFill = GetOrCreateRect(ws, SHAPE_PREFIX & ""RowFill"")" & vbCrLf
-    c = c & "    If mColFill Is Nothing Then Set mColFill = GetOrCreateRect(ws, SHAPE_PREFIX & ""ColFill"")" & vbCrLf
-    c = c & "    If mRowLineTop Is Nothing Then Set mRowLineTop = GetOrCreateLine(ws, SHAPE_PREFIX & ""RowLineTop"")" & vbCrLf
-    c = c & "    If mRowLineBot Is Nothing Then Set mRowLineBot = GetOrCreateLine(ws, SHAPE_PREFIX & ""RowLineBot"")" & vbCrLf
-    c = c & "    If mColLineLeft Is Nothing Then Set mColLineLeft = GetOrCreateLine(ws, SHAPE_PREFIX & ""ColLineLeft"")" & vbCrLf
-    c = c & "    If mColLineRight Is Nothing Then Set mColLineRight = GetOrCreateLine(ws, SHAPE_PREFIX & ""ColLineRight"")" & vbCrLf
-    c = c & "End Sub" & vbCrLf & vbCrLf
     c = c & "Public Sub ClearHighlights(ByVal ws As Worksheet)" & vbCrLf
-    c = c & "    Dim i As Long" & vbCrLf
-    c = c & "    Application.ScreenUpdating = False" & vbCrLf
     c = c & "    On Error Resume Next" & vbCrLf
+    c = c & "    Dim i As Long" & vbCrLf
+    c = c & "    For i = ws.Cells(1, 1).FormatConditions.Count To 1 Step -1" & vbCrLf
+    c = c & "        If IsRHFormula(ws.Cells(1, 1).FormatConditions(i).Formula1) Then" & vbCrLf
+    c = c & "            ws.Cells(1, 1).FormatConditions(i).Delete" & vbCrLf
+    c = c & "        End If" & vbCrLf
+    c = c & "    Next i" & vbCrLf
     c = c & "    For i = ws.Shapes.Count To 1 Step -1" & vbCrLf
     c = c & "        If Left$(ws.Shapes(i).Name, Len(SHAPE_PREFIX)) = SHAPE_PREFIX Then ws.Shapes(i).Delete" & vbCrLf
     c = c & "    Next i" & vbCrLf
     c = c & "    On Error GoTo 0" & vbCrLf
-    c = c & "    Set mSheet = Nothing" & vbCrLf
-    c = c & "    Set mRowFill = Nothing: Set mColFill = Nothing" & vbCrLf
-    c = c & "    Set mRowLineTop = Nothing: Set mRowLineBot = Nothing" & vbCrLf
-    c = c & "    Set mColLineLeft = Nothing: Set mColLineRight = Nothing" & vbCrLf
-    c = c & "    Application.ScreenUpdating = True" & vbCrLf
     c = c & "End Sub" & vbCrLf & vbCrLf
     c = c & "Public Function HasSelectionChanged(ByVal ws As Worksheet, ByVal target As Range) As Boolean" & vbCrLf
     c = c & "    Dim sn As String" & vbCrLf
@@ -442,79 +420,45 @@ Private Function GetModHighlighterCode() As String
     c = c & "End Function" & vbCrLf & vbCrLf
     c = c & "Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)" & vbCrLf
     c = c & "    On Error GoTo ErrHandler" & vbCrLf
-    c = c & "    If ws.ProtectDrawingObjects Then Exit Sub" & vbCrLf
-    c = c & "    Dim visRange As Range" & vbCrLf
-    c = c & "    Dim rowTop As Double, rowBottom As Double, rowHeight As Double" & vbCrLf
-    c = c & "    Dim colLeft As Double, colRight As Double, colWidth As Double" & vbCrLf
-    c = c & "    Dim visLeft As Double, visTop As Double, visRight As Double, visBottom As Double" & vbCrLf
     c = c & "    If Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled Or _" & vbCrLf
     c = c & "            modSettings.RowFillEnabled Or modSettings.ColFillEnabled) Then" & vbCrLf
-    c = c & "        HideAllShapes ws: Exit Sub" & vbCrLf
+    c = c & "        ClearHighlights ws: Exit Sub" & vbCrLf
     c = c & "    End If" & vbCrLf
-    c = c & "    With target" & vbCrLf
-    c = c & "        rowTop = .Top: rowHeight = .Height: rowBottom = rowTop + rowHeight" & vbCrLf
-    c = c & "        colLeft = .Left: colWidth = .Width: colRight = colLeft + colWidth" & vbCrLf
-    c = c & "    End With" & vbCrLf
-    c = c & "    Set visRange = Application.ActiveWindow.VisibleRange" & vbCrLf
-    c = c & "    Dim area As Range" & vbCrLf
-    c = c & "    visLeft = 9999999#: visTop = 9999999#: visRight = 0#: visBottom = 0#" & vbCrLf
-    c = c & "    For Each area In visRange.Areas" & vbCrLf
-    c = c & "        If area.Left < visLeft Then visLeft = area.Left" & vbCrLf
-    c = c & "        If area.Top < visTop Then visTop = area.Top" & vbCrLf
-    c = c & "        If area.Left + area.Width > visRight Then visRight = area.Left + area.Width" & vbCrLf
-    c = c & "        If area.Top + area.Height > visBottom Then visBottom = area.Top + area.Height" & vbCrLf
-    c = c & "    Next area" & vbCrLf
+    c = c & "    Dim tR As Long, tC As Long, tRE As Long, tCE As Long" & vbCrLf
+    c = c & "    tR = target.Row: tC = target.Column" & vbCrLf
+    c = c & "    tRE = tR + target.Rows.Count - 1: tCE = tC + target.Columns.Count - 1" & vbCrLf
     c = c & "    Application.ScreenUpdating = False" & vbCrLf
-    c = c & "    EnsureShapes ws" & vbCrLf
-    c = c & "    If modSettings.RowFillEnabled And modSettings.RowFillOpacity > 0 Then" & vbCrLf
-    c = c & "        With mRowFill" & vbCrLf
-    c = c & "            .Left = visLeft: .Top = rowTop: .Width = visRight - visLeft: .Height = rowHeight" & vbCrLf
-    c = c & "            .Fill.ForeColor.RGB = modSettings.RowFillColor" & vbCrLf
-    c = c & "            .Fill.Transparency = 1# - modSettings.RowFillOpacity" & vbCrLf
-    c = c & "            .Line.Visible = msoFalse: .Visible = msoTrue" & vbCrLf
-    c = c & "        End With" & vbCrLf
-    c = c & "    Else: mRowFill.Visible = msoFalse" & vbCrLf
+    c = c & "    ClearHighlights ws" & vbCrLf
+    c = c & "    If modSettings.RowLineEnabled Or modSettings.RowFillEnabled Then" & vbCrLf
+    c = c & "        Dim rF As String: rF = CF_ROW_PREFIX & tR & "",ROW()<="" & tRE & "")""" & vbCrLf
+    c = c & "        Dim fcR As FormatCondition" & vbCrLf
+    c = c & "        Set fcR = ws.Cells.FormatConditions.Add(xlExpression, , rF)" & vbCrLf
+    c = c & "        fcR.StopIfTrue = False" & vbCrLf
+    c = c & "        If modSettings.RowFillEnabled And modSettings.RowFillOpacity > 0 Then" & vbCrLf
+    c = c & "            fcR.Interior.Color = BlendColor(modSettings.RowFillColor, modSettings.RowFillOpacity)" & vbCrLf
+    c = c & "        End If" & vbCrLf
+    c = c & "        If modSettings.RowLineEnabled Then" & vbCrLf
+    c = c & "            With fcR.Borders(xlEdgeTop): .LineStyle = xlContinuous: .Color = modSettings.RowLineColor: .Weight = SizeToWeight(modSettings.RowLineSize): End With" & vbCrLf
+    c = c & "            With fcR.Borders(xlEdgeBottom): .LineStyle = xlContinuous: .Color = modSettings.RowLineColor: .Weight = SizeToWeight(modSettings.RowLineSize): End With" & vbCrLf
+    c = c & "        End If" & vbCrLf
     c = c & "    End If" & vbCrLf
-    c = c & "    If modSettings.ColFillEnabled And modSettings.ColFillOpacity > 0 Then" & vbCrLf
-    c = c & "        With mColFill" & vbCrLf
-    c = c & "            .Left = colLeft: .Top = visTop: .Width = colWidth: .Height = visBottom - visTop" & vbCrLf
-    c = c & "            .Fill.ForeColor.RGB = modSettings.ColFillColor" & vbCrLf
-    c = c & "            .Fill.Transparency = 1# - modSettings.ColFillOpacity" & vbCrLf
-    c = c & "            .Line.Visible = msoFalse: .Visible = msoTrue" & vbCrLf
-    c = c & "        End With" & vbCrLf
-    c = c & "    Else: mColFill.Visible = msoFalse" & vbCrLf
-    c = c & "    End If" & vbCrLf
-    c = c & "    If modSettings.RowLineEnabled Then" & vbCrLf
-    c = c & "        PosLine mRowLineTop, visLeft, rowTop, visRight, rowTop, modSettings.RowLineColor, modSettings.RowLineSize" & vbCrLf
-    c = c & "        PosLine mRowLineBot, visLeft, rowBottom, visRight, rowBottom, modSettings.RowLineColor, modSettings.RowLineSize" & vbCrLf
-    c = c & "    Else: mRowLineTop.Visible = msoFalse: mRowLineBot.Visible = msoFalse" & vbCrLf
-    c = c & "    End If" & vbCrLf
-    c = c & "    If modSettings.ColLineEnabled Then" & vbCrLf
-    c = c & "        PosLine mColLineLeft, colLeft, visTop, colLeft, visBottom, modSettings.ColLineColor, modSettings.ColLineSize" & vbCrLf
-    c = c & "        PosLine mColLineRight, colRight, visTop, colRight, visBottom, modSettings.ColLineColor, modSettings.ColLineSize" & vbCrLf
-    c = c & "    Else: mColLineLeft.Visible = msoFalse: mColLineRight.Visible = msoFalse" & vbCrLf
+    c = c & "    If modSettings.ColLineEnabled Or modSettings.ColFillEnabled Then" & vbCrLf
+    c = c & "        Dim cF2 As String: cF2 = CF_COL_PREFIX & tC & "",COLUMN()<="" & tCE & "")""" & vbCrLf
+    c = c & "        Dim fcC As FormatCondition" & vbCrLf
+    c = c & "        Set fcC = ws.Cells.FormatConditions.Add(xlExpression, , cF2)" & vbCrLf
+    c = c & "        fcC.StopIfTrue = False" & vbCrLf
+    c = c & "        If modSettings.ColFillEnabled And modSettings.ColFillOpacity > 0 Then" & vbCrLf
+    c = c & "            fcC.Interior.Color = BlendColor(modSettings.ColFillColor, modSettings.ColFillOpacity)" & vbCrLf
+    c = c & "        End If" & vbCrLf
+    c = c & "        If modSettings.ColLineEnabled Then" & vbCrLf
+    c = c & "            With fcC.Borders(xlEdgeLeft): .LineStyle = xlContinuous: .Color = modSettings.ColLineColor: .Weight = SizeToWeight(modSettings.ColLineSize): End With" & vbCrLf
+    c = c & "            With fcC.Borders(xlEdgeRight): .LineStyle = xlContinuous: .Color = modSettings.ColLineColor: .Weight = SizeToWeight(modSettings.ColLineSize): End With" & vbCrLf
+    c = c & "        End If" & vbCrLf
     c = c & "    End If" & vbCrLf
     c = c & "    Application.ScreenUpdating = True: Exit Sub" & vbCrLf
     c = c & "ErrHandler:" & vbCrLf
     c = c & "    Application.ScreenUpdating = True" & vbCrLf
     c = c & "    Debug.Print ""RH Error: "" & Err.Description" & vbCrLf
-    c = c & "End Sub" & vbCrLf & vbCrLf
-    c = c & "Private Sub PosLine(ByVal shp As Shape, ByVal x1 As Double, ByVal y1 As Double, _" & vbCrLf
-    c = c & "    ByVal x2 As Double, ByVal y2 As Double, ByVal lc As Long, ByVal lw As Double)" & vbCrLf
-    c = c & "    With shp" & vbCrLf
-    c = c & "        .Left = IIf(x1 < x2, x1, x2): .Top = IIf(y1 < y2, y1, y2)" & vbCrLf
-    c = c & "        .Width = Abs(x2 - x1): .Height = Abs(y2 - y1)" & vbCrLf
-    c = c & "        .Line.ForeColor.RGB = lc: .Line.Weight = lw" & vbCrLf
-    c = c & "        .Line.Visible = msoTrue: .Visible = msoTrue" & vbCrLf
-    c = c & "    End With" & vbCrLf
-    c = c & "End Sub" & vbCrLf & vbCrLf
-    c = c & "Private Sub HideAllShapes(ByVal ws As Worksheet)" & vbCrLf
-    c = c & "    On Error Resume Next" & vbCrLf
-    c = c & "    EnsureShapes ws" & vbCrLf
-    c = c & "    mRowFill.Visible = msoFalse: mColFill.Visible = msoFalse" & vbCrLf
-    c = c & "    mRowLineTop.Visible = msoFalse: mRowLineBot.Visible = msoFalse" & vbCrLf
-    c = c & "    mColLineLeft.Visible = msoFalse: mColLineRight.Visible = msoFalse" & vbCrLf
-    c = c & "    On Error GoTo 0" & vbCrLf
     c = c & "End Sub" & vbCrLf & vbCrLf
     c = c & "Public Sub ToggleRowLine()" & vbCrLf
     c = c & "    Dim s As Boolean" & vbCrLf
@@ -567,6 +511,34 @@ Private Function GetClsAppEventsCode() As String
     c = c & "    Exit Sub" & vbCrLf
     c = c & "ErrHandler:" & vbCrLf
     c = c & "    Debug.Print ""RH Error: "" & Err.Description" & vbCrLf
+    c = c & "End Sub" & vbCrLf & vbCrLf
+    c = c & "Private Sub App_WorkbookBeforeSave(ByVal Wb As Workbook, ByVal SaveAsUI As Boolean, Cancel As Boolean)" & vbCrLf
+    c = c & "    On Error Resume Next" & vbCrLf
+    c = c & "    Dim ws As Worksheet" & vbCrLf
+    c = c & "    For Each ws In Wb.Worksheets: modHighlighter.ClearHighlights ws: Next ws" & vbCrLf
+    c = c & "    On Error GoTo 0" & vbCrLf
+    c = c & "End Sub" & vbCrLf & vbCrLf
+    c = c & "Private Sub App_WorkbookAfterSave(ByVal Wb As Workbook, ByVal Success As Boolean)" & vbCrLf
+    c = c & "    On Error Resume Next" & vbCrLf
+    c = c & "    If Success Then" & vbCrLf
+    c = c & "        If Not ActiveCell Is Nothing Then" & vbCrLf
+    c = c & "            If TypeOf ActiveSheet Is Worksheet Then modHighlighter.DrawHighlights ActiveSheet, ActiveCell" & vbCrLf
+    c = c & "        End If" & vbCrLf
+    c = c & "    End If" & vbCrLf
+    c = c & "    On Error GoTo 0" & vbCrLf
+    c = c & "End Sub" & vbCrLf & vbCrLf
+    c = c & "Private Sub App_WorkbookDeactivate(ByVal Wb As Workbook)" & vbCrLf
+    c = c & "    On Error Resume Next" & vbCrLf
+    c = c & "    Dim ws As Worksheet" & vbCrLf
+    c = c & "    For Each ws In Wb.Worksheets: modHighlighter.ClearHighlights ws: Next ws" & vbCrLf
+    c = c & "    On Error GoTo 0" & vbCrLf
+    c = c & "End Sub" & vbCrLf & vbCrLf
+    c = c & "Private Sub App_WorkbookActivate(ByVal Wb As Workbook)" & vbCrLf
+    c = c & "    On Error Resume Next" & vbCrLf
+    c = c & "    If Not ActiveCell Is Nothing Then" & vbCrLf
+    c = c & "        If TypeOf ActiveSheet Is Worksheet Then modHighlighter.DrawHighlights ActiveSheet, ActiveCell" & vbCrLf
+    c = c & "    End If" & vbCrLf
+    c = c & "    On Error GoTo 0" & vbCrLf
     c = c & "End Sub" & vbCrLf
     GetClsAppEventsCode = c
 End Function

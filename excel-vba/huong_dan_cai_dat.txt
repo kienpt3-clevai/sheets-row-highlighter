@@ -5,14 +5,19 @@
 Highlight dong va cot dang chon trong Excel (tuong tu
 Google Sheets Row Highlighter extension).
 
+Su dung Conditional Formatting de hien thi highlight,
+hoat dong ca voi freeze panes.
+
 Tinh nang:
   - Row Line: duong vien tren/duoi dong
   - Col Line: duong vien trai/phai cot
   - Row Fill: to mau mo dong
   - Col Fill: to mau mo cot
   - Ho tro chon nhieu o
-  - Ho tro merged cells
+  - Ho tro freeze panes
   - Tu dong chay tren moi file Excel
+  - Tu dong xoa highlight truoc khi save
+    (khong anh huong file chia se voi dong nghiep)
 
 ========================================================
   CAI DAT (3 BUOC)
@@ -66,6 +71,18 @@ Nhan Ctrl+Shift+H de mo cua so cai dat:
   - "Reset Defaults": quay ve mac dinh da luu
 
 ========================================================
+  CHIA SE FILE TREN ONEDRIVE
+========================================================
+
+Highlight se TU DONG duoc xoa khi:
+  - Luu file (Ctrl+S hoac AutoSave)
+  - Chuyen sang workbook khac
+  - Dong Excel
+
+Dong nghiep khong cai VBA se KHONG thay highlight.
+Khi ban quay lai file, highlight tu dong hien lai.
+
+========================================================
   GO CAI DAT
 ========================================================
 
@@ -81,8 +98,10 @@ Nhan Ctrl+Shift+H de mo cua so cai dat:
 
   - Highlight chi cap nhat khi chon o moi (khong cap nhat
     khi scroll ma khong chon o)
-  - Ctrl+Z co the undo thao tac shape thay vi thao tac
-    cua ban (han che cua VBA)
+  - Line weight chi ho tro 4 muc: hairline, thin, medium,
+    thick (han che cua Conditional Formatting)
+  - Fill opacity duoc mo phong bang pha mau voi trang
+    (khong phai transparent that su)
   - Tren sheet duoc bao ve (protected), highlight se tu
     dong bo qua
   - File modInstaller.bas chua toan bo code, chi can 1

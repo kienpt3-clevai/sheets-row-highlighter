@@ -1,30 +1,16 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-END
-Attribute VB_Name = "clsAppEvents"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
 Option Explicit
 
 Public WithEvents App As Application
-Attribute App.VB_VarHelpID = -1
 
 Private Sub App_SheetSelectionChange(ByVal Sh As Object, ByVal Target As Range)
     On Error GoTo ErrHandler
-
-    ' Only handle Worksheets (not Chart sheets, etc.)
     If Not TypeOf Sh Is Worksheet Then Exit Sub
 
     Dim ws As Worksheet
     Set ws = Sh
 
-    ' Skip if selection didn't actually change
     If Not modHighlighter.HasSelectionChanged(ws, Target) Then Exit Sub
 
-    ' Clear old highlights, draw new ones
     modHighlighter.ClearHighlights ws
     modHighlighter.DrawHighlights ws, Target
 
@@ -35,8 +21,6 @@ End Sub
 
 Private Sub App_SheetActivate(ByVal Sh As Object)
     On Error GoTo ErrHandler
-
-    ' Redraw when switching sheets
     If Not TypeOf Sh Is Worksheet Then Exit Sub
     Dim ws As Worksheet
     Set ws = Sh
@@ -44,8 +28,51 @@ Private Sub App_SheetActivate(ByVal Sh As Object)
     If Not ActiveCell Is Nothing Then
         modHighlighter.DrawHighlights ws, ActiveCell
     End If
-
     Exit Sub
 ErrHandler:
     Debug.Print "RH SheetActivate Error: " & Err.Description
+End Sub
+
+' --- Clean highlights BEFORE save so shared files stay clean ---
+Private Sub App_WorkbookBeforeSave(ByVal Wb As Workbook, ByVal SaveAsUI As Boolean, Cancel As Boolean)
+    On Error Resume Next
+    Dim ws As Worksheet
+    For Each ws In Wb.Worksheets
+        modHighlighter.ClearHighlights ws
+    Next ws
+    On Error GoTo 0
+End Sub
+
+' --- Redraw AFTER save completes ---
+Private Sub App_WorkbookAfterSave(ByVal Wb As Workbook, ByVal Success As Boolean)
+    On Error Resume Next
+    If Success Then
+        If Not ActiveCell Is Nothing Then
+            If TypeOf ActiveSheet Is Worksheet Then
+                modHighlighter.DrawHighlights ActiveSheet, ActiveCell
+            End If
+        End If
+    End If
+    On Error GoTo 0
+End Sub
+
+' --- Clean when switching away from a workbook ---
+Private Sub App_WorkbookDeactivate(ByVal Wb As Workbook)
+    On Error Resume Next
+    Dim ws As Worksheet
+    For Each ws In Wb.Worksheets
+        modHighlighter.ClearHighlights ws
+    Next ws
+    On Error GoTo 0
+End Sub
+
+' --- Redraw when coming back to a workbook ---
+Private Sub App_WorkbookActivate(ByVal Wb As Workbook)
+    On Error Resume Next
+    If Not ActiveCell Is Nothing Then
+        If TypeOf ActiveSheet Is Worksheet Then
+            modHighlighter.DrawHighlights ActiveSheet, ActiveCell
+        End If
+    End If
+    On Error GoTo 0
 End Sub
