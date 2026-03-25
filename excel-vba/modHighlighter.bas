@@ -242,10 +242,21 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
     End If
 
 Done:
+    ' Replace undo stack entries from shape/CF ops with a no-op
+    ' so Ctrl+Z doesn't undo highlight operations
+    On Error Resume Next
+    Application.OnUndo "", "modHighlighter.NoOp"
+    On Error GoTo 0
+
     Application.ScreenUpdating = True
     Exit Sub
 ErrHandler:
     Application.ScreenUpdating = True
+End Sub
+
+' --- No-op for undo stack ---
+Public Sub NoOp()
+    ' Intentionally empty - absorbs one Ctrl+Z press
 End Sub
 
 Private Sub HideAllShapes(ByVal ws As Worksheet)
@@ -291,7 +302,7 @@ Public Sub ToggleAll()
     RefreshHighlight
 End Sub
 
-Private Sub RefreshHighlight()
+Public Sub RefreshHighlight()
     If ActiveSheet Is Nothing Then Exit Sub
     ClearHighlights ActiveSheet
     If Not ActiveCell Is Nothing Then
