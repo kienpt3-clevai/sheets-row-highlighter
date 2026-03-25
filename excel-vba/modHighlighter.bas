@@ -77,8 +77,8 @@ Private Sub ClearCFRules(ByVal ws As Worksheet)
     Dim fc As Object
     Dim formula As String
     On Error Resume Next
-    For i = ws.Cells(1, 1).FormatConditions.Count To 1 Step -1
-        Set fc = ws.Cells(1, 1).FormatConditions(i)
+    For i = ws.Cells.FormatConditions.Count To 1 Step -1
+        Set fc = ws.Cells.FormatConditions(i)
         formula = ""
         formula = fc.Formula1
         If Len(formula) > 0 Then
