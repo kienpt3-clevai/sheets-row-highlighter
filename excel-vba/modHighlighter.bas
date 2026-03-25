@@ -1,9 +1,8 @@
 Option Explicit
 
-' === Shapes for lines + CF for fills (fills work in freeze panes) ===
+' === Shapes for lines + row fill (scrollable) + CF for row fill (freeze) ===
 Private Const SHAPE_PREFIX As String = "RH_"
 Private Const CF_ROW_TAG As String = "=AND(ROW()>="
-Private Const CF_COL_TAG As String = "=AND(COLUMN()>="
 
 Private mLastRow As Long
 Private mLastCol As Long
@@ -16,6 +15,7 @@ Private mRowLineTop As Shape
 Private mRowLineBot As Shape
 Private mColLineLeft As Shape
 Private mColLineRight As Shape
+Private mRowFill As Shape
 
 ' ======== SHAPE HELPERS ========
 
@@ -30,6 +30,17 @@ Private Function GetOrCreateLine(ByVal ws As Worksheet, ByVal sName As String) A
     End If
 End Function
 
+Private Function GetOrCreateRect(ByVal ws As Worksheet, ByVal sName As String) As Shape
+    On Error Resume Next
+    Set GetOrCreateRect = ws.Shapes(sName)
+    On Error GoTo 0
+    If GetOrCreateRect Is Nothing Then
+        Set GetOrCreateRect = ws.Shapes.AddShape(msoShapeRectangle, 0, 0, 10, 10)
+        GetOrCreateRect.Name = sName
+        GetOrCreateRect.Placement = xlFreeFloating
+    End If
+End Function
+
 Private Sub EnsureShapes(ByVal ws As Worksheet)
     If Not mSheet Is ws Then
         Set mSheet = ws
@@ -37,11 +48,13 @@ Private Sub EnsureShapes(ByVal ws As Worksheet)
         Set mRowLineBot = Nothing
         Set mColLineLeft = Nothing
         Set mColLineRight = Nothing
+        Set mRowFill = Nothing
     End If
     If mRowLineTop Is Nothing Then Set mRowLineTop = GetOrCreateLine(ws, SHAPE_PREFIX & "RowLineTop")
     If mRowLineBot Is Nothing Then Set mRowLineBot = GetOrCreateLine(ws, SHAPE_PREFIX & "RowLineBot")
     If mColLineLeft Is Nothing Then Set mColLineLeft = GetOrCreateLine(ws, SHAPE_PREFIX & "ColLineLeft")
     If mColLineRight Is Nothing Then Set mColLineRight = GetOrCreateLine(ws, SHAPE_PREFIX & "ColLineRight")
+    If mRowFill Is Nothing Then Set mRowFill = GetOrCreateRect(ws, SHAPE_PREFIX & "RowFill")
 End Sub
 
 Private Sub PosLine(ByVal shp As Shape, _
@@ -60,17 +73,7 @@ Private Sub PosLine(ByVal shp As Shape, _
     End With
 End Sub
 
-' ======== CF FILL HELPERS ========
-
-Private Function BlendColor(ByVal baseColor As Long, ByVal opacity As Double) As Long
-    Dim r As Long, g As Long, b As Long
-    r = baseColor And &HFF
-    g = (baseColor \ &H100) And &HFF
-    b = (baseColor \ &H10000) And &HFF
-    BlendColor = RGB(CLng(255 - (255 - r) * opacity), _
-                     CLng(255 - (255 - g) * opacity), _
-                     CLng(255 - (255 - b) * opacity))
-End Function
+' ======== CF FILL HELPERS (for freeze panes) ========
 
 Private Sub ClearCFRules(ByVal ws As Worksheet)
     Dim i As Long
@@ -82,8 +85,7 @@ Private Sub ClearCFRules(ByVal ws As Worksheet)
         formula = ""
         formula = fc.Formula1
         If Len(formula) > 0 Then
-            If Left$(formula, Len(CF_ROW_TAG)) = CF_ROW_TAG Or _
-               Left$(formula, Len(CF_COL_TAG)) = CF_COL_TAG Then
+            If Left$(formula, Len(CF_ROW_TAG)) = CF_ROW_TAG Then
                 fc.Delete
             End If
         End If
@@ -91,45 +93,20 @@ Private Sub ClearCFRules(ByVal ws As Worksheet)
     On Error GoTo 0
 End Sub
 
-Private Sub DrawCFFills(ByVal ws As Worksheet, ByVal target As Range)
-    Dim targetRow As Long, targetRowEnd As Long
-    Dim targetCol As Long, targetColEnd As Long
-    targetRow = target.Row
-    targetCol = target.Column
-    targetRowEnd = targetRow + target.Rows.Count - 1
-    targetColEnd = targetCol + target.Columns.Count - 1
-
-    On Error Resume Next
-
-    If modSettings.RowFillEnabled And modSettings.RowFillOpacity > 0 Then
-        Dim rowF As String
-        rowF = CF_ROW_TAG & targetRow & ",ROW()<=" & targetRowEnd & ")"
-        Dim fcR As FormatCondition
-        Set fcR = ws.Cells.FormatConditions.Add(xlExpression, , rowF)
-        If Not fcR Is Nothing Then
-            fcR.StopIfTrue = False
-            fcR.Interior.Color = BlendColor(modSettings.RowFillColor, modSettings.RowFillOpacity)
-        End If
-    End If
-
-    If modSettings.ColFillEnabled And modSettings.ColFillOpacity > 0 Then
-        Dim colF As String
-        colF = CF_COL_TAG & targetCol & ",COLUMN()<=" & targetColEnd & ")"
-        Dim fcC As FormatCondition
-        Set fcC = ws.Cells.FormatConditions.Add(xlExpression, , colF)
-        If Not fcC Is Nothing Then
-            fcC.StopIfTrue = False
-            fcC.Interior.Color = BlendColor(modSettings.ColFillColor, modSettings.ColFillOpacity)
-        End If
-    End If
-
-    On Error GoTo 0
-End Sub
+Private Function BlendColor(ByVal baseColor As Long, ByVal opacity As Double) As Long
+    Dim r As Long, g As Long, b As Long
+    r = baseColor And &HFF
+    g = (baseColor \ &H100) And &HFF
+    b = (baseColor \ &H10000) And &HFF
+    BlendColor = RGB(CLng(255 - (255 - r) * opacity), _
+                     CLng(255 - (255 - g) * opacity), _
+                     CLng(255 - (255 - b) * opacity))
+End Function
 
 ' ======== PUBLIC API ========
 
 Public Sub ClearHighlights(ByVal ws As Worksheet)
-    ' Clear CF fills (separate error handling)
+    ' Clear CF fill rules
     ClearCFRules ws
 
     ' Clear shapes
@@ -147,6 +124,7 @@ Public Sub ClearHighlights(ByVal ws As Worksheet)
     Set mRowLineBot = Nothing
     Set mColLineLeft = Nothing
     Set mColLineRight = Nothing
+    Set mRowFill = Nothing
 End Sub
 
 Public Function HasSelectionChanged(ByVal ws As Worksheet, ByVal target As Range) As Boolean
@@ -173,21 +151,30 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
         Exit Sub
     End If
 
+    Dim targetRow As Long, targetRowEnd As Long
+    targetRow = target.Row
+    targetRowEnd = targetRow + target.Rows.Count - 1
+
     Application.ScreenUpdating = False
 
-    ' --- CF fills (tach rieng, loi khong anh huong shapes) ---
+    ' === CF Row Fill (freeze panes) ===
+    ' Uses RowFill settings (checkbox Row Fill, color, opacity)
     ClearCFRules ws
-    If modSettings.RowFillEnabled Or modSettings.ColFillEnabled Then
-        DrawCFFills ws, target
+    If modSettings.RowFillEnabled And modSettings.RowFillOpacity > 0 Then
+        On Error Resume Next
+        Dim rowF As String
+        rowF = CF_ROW_TAG & targetRow & ",ROW()<=" & targetRowEnd & ")"
+        Dim fcR As FormatCondition
+        Set fcR = ws.Cells.FormatConditions.Add(xlExpression, , rowF)
+        If Not fcR Is Nothing Then
+            fcR.StopIfTrue = False
+            fcR.Interior.Color = BlendColor(modSettings.RowFillColor, modSettings.RowFillOpacity)
+        End If
+        On Error GoTo 0
     End If
 
-    ' --- Shape lines ---
-    On Error GoTo LineErr
-
-    If Not (modSettings.RowLineEnabled Or modSettings.ColLineEnabled) Then
-        HideAllShapes ws
-        GoTo Done
-    End If
+    ' === Shape drawing ===
+    On Error GoTo ErrHandler
 
     If ws.ProtectDrawingObjects Then GoTo Done
 
@@ -203,17 +190,36 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
         If area.Top + area.Height > visBottom Then visBottom = area.Top + area.Height
     Next area
 
-    Dim rowTop As Double, rowBottom As Double
+    Dim rowTop As Double, rowBottom As Double, rowHeight As Double
     Dim colLeft As Double, colRight As Double
     With target
         rowTop = .Top
-        rowBottom = rowTop + .Height
+        rowHeight = .Height
+        rowBottom = rowTop + rowHeight
         colLeft = .Left
         colRight = colLeft + .Width
     End With
 
     EnsureShapes ws
 
+    ' --- Shape Row Fill (scrollable) ---
+    ' Uses ColFill settings (checkbox Col Fill, color, opacity) repurposed
+    If modSettings.ColFillEnabled And modSettings.ColFillOpacity > 0 Then
+        With mRowFill
+            .Left = visLeft
+            .Top = rowTop
+            .Width = visRight - visLeft
+            .Height = rowHeight
+            .Fill.ForeColor.RGB = modSettings.ColFillColor
+            .Fill.Transparency = 1# - modSettings.ColFillOpacity
+            .Line.Visible = msoFalse
+            .Visible = msoTrue
+        End With
+    Else
+        mRowFill.Visible = msoFalse
+    End If
+
+    ' --- Row Lines ---
     If modSettings.RowLineEnabled Then
         PosLine mRowLineTop, visLeft, rowTop, visRight, rowTop, _
             modSettings.RowLineColor, modSettings.RowLineSize
@@ -224,6 +230,7 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
         mRowLineBot.Visible = msoFalse
     End If
 
+    ' --- Col Lines ---
     If modSettings.ColLineEnabled Then
         PosLine mColLineLeft, colLeft, visTop, colLeft, visBottom, _
             modSettings.ColLineColor, modSettings.ColLineSize
@@ -237,13 +244,14 @@ Public Sub DrawHighlights(ByVal ws As Worksheet, ByVal target As Range)
 Done:
     Application.ScreenUpdating = True
     Exit Sub
-LineErr:
+ErrHandler:
     Application.ScreenUpdating = True
 End Sub
 
 Private Sub HideAllShapes(ByVal ws As Worksheet)
     On Error Resume Next
     EnsureShapes ws
+    mRowFill.Visible = msoFalse
     mRowLineTop.Visible = msoFalse
     mRowLineBot.Visible = msoFalse
     mColLineLeft.Visible = msoFalse
