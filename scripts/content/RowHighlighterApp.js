@@ -66,7 +66,7 @@ class RowHighlighterApp {
     const oHB = this.offsetHenryBottom
     const oHR = this.offsetHenryRight
 
-    const rowBands = this.isRowEnabled
+    const rowBands = (this.isRowEnabled || this.fillRowEnabled)
       ? this._mergeRectList(rectList, 'y').map(({ height, y }) => ({
           left: `${insL + oHL}px`,
           top: `${y - halfRowLine + oHT}px`,
@@ -74,7 +74,7 @@ class RowHighlighterApp {
           height: `${height - insB + this.rowLineSize + oHB - oHT}px`,
         }))
       : []
-    const colBands = this.isColEnabled
+    const colBands = (this.isColEnabled || this.fillColEnabled)
       ? this._mergeRectList(rectList, 'x').map(({ width, x }) => ({
           left: `${x + insL - halfColLine + oHL}px`,
           top: `${insT + oHT}px`,
@@ -107,8 +107,8 @@ class RowHighlighterApp {
     }
 
     const lineTasks = [
-      ...rowBands.map((box) => ({ ...box, isRow: true })),
-      ...colBands.map((box) => ({ ...box, isRow: false })),
+      ...(this.isRowEnabled ? rowBands.map((box) => ({ ...box, isRow: true })) : []),
+      ...(this.isColEnabled ? colBands.map((box) => ({ ...box, isRow: false })) : []),
     ]
     highlightTaskList = highlightTaskList.concat(lineTasks)
 
