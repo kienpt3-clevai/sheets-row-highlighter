@@ -231,9 +231,8 @@ class SheetsActiveCellLocator {
     const sheetRect = this._getSheetContainerRect()
     if (!sheetRect) return [rect]
     const edgeTolerance = 80
-    const minRowWidth = 120
     const fullRow =
-      rect.x <= edgeTolerance && rect.width >= minRowWidth
+      rect.x <= edgeTolerance && rect.width >= sheetRect.width - edgeTolerance
     const fullCol =
       rect.y <= edgeTolerance && rect.height >= sheetRect.height - edgeTolerance
     if (fullRow || fullCol) return []
