@@ -4,9 +4,16 @@
     if (!url) return false
     try {
       const fullUrl = new URL(String(url), location.href).href
-      const match = fullUrl.match(/\/u\/([1-9]\d*)\//);
-      if (match) {
-        location.replace(fullUrl.replace(/\/u\/[1-9]\d*\//, '/u/0/'))
+      let newUrl = fullUrl
+
+      // Pattern 1: /u/N/ trong path (docs, sheets, slides)
+      newUrl = newUrl.replace(/\/u\/[1-9]\d*\//, '/u/0/')
+
+      // Pattern 2: authuser=N trong query string (meet)
+      newUrl = newUrl.replace(/([?&]authuser=)[1-9]\d*(&|$)/, '$10$2')
+
+      if (newUrl !== fullUrl) {
+        location.replace(newUrl)
         return true
       }
     } catch (_) {}
@@ -16,7 +23,7 @@
   // Kiểm tra ngay khi document_start (bắt server-side redirect)
   if (redirectIfNeeded(location.href)) return
 
-  // Patch History API để bắt SPA navigation (Google dùng replaceState để thêm /u/5/)
+  // Patch History API để bắt SPA navigation (Google dùng replaceState để thêm /u/5/ hoặc authuser=5)
   const _pushState = history.pushState.bind(history)
   const _replaceState = history.replaceState.bind(history)
 
