@@ -13,6 +13,9 @@
     "message": "Toggle row and column highlight"
   },
   "slidesFitToScreenDescription": {
-    "message": "Google Slides: Fit to screen (send Ctrl+Alt+[)"
+    "message": "Google Slides: Fit to screen"
+  },
+  "captureSelectionDescription": {
+    "message": "Capture selection as image"
   }
 }

@@ -202,8 +202,31 @@ storage.onChanged.addListener(loadSettings)
 // Cập nhật khi popup/background gửi message; trả sheetKey khi được hỏi
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'applyCommand') {
-    app.isRowEnabled = message.row ?? app.isRowEnabled
-    app.isColEnabled = message.column ?? app.isColEnabled
+    const cmd = message.command
+    if (cmd === 'toggleRow') {
+      const on = !(app.isRowEnabled || app.fillRowEnabled)
+      app.isRowEnabled = on
+      app.fillRowEnabled = on
+    } else if (cmd === 'toggleColumn') {
+      const on = !(app.isColEnabled || app.fillColEnabled)
+      app.isColEnabled = on
+      app.fillColEnabled = on
+    } else if (cmd === 'toggleBoth') {
+      const anyOn =
+        app.isRowEnabled ||
+        app.fillRowEnabled ||
+        app.isColEnabled ||
+        app.fillColEnabled
+      const on = !anyOn
+      app.isRowEnabled = on
+      app.fillRowEnabled = on
+      app.isColEnabled = on
+      app.fillColEnabled = on
+    } else {
+      // Tương thích format cũ: { row, column }
+      app.isRowEnabled = message.row ?? app.isRowEnabled
+      app.isColEnabled = message.column ?? app.isColEnabled
+    }
     updateHighlight()
     // Đồng bộ vào sheetSettings để lần sau load đúng
     const sheetKey =
@@ -215,6 +238,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         ...cur,
         row: app.isRowEnabled,
         column: app.isColEnabled,
+        fillRow: app.fillRowEnabled,
+        fillCol: app.fillColEnabled,
         updatedAt: Date.now(),
       }
       chrome.storage.local.set({ sheetSettings: all })
@@ -229,10 +254,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       loadSettings()
     }
   }
+  if (message.type === 'captureSelection') {
+    console.log('[SheetsCapturer] received captureSelection message', {
+      hasCapturer: !!(/** @type {any} */ (window).__SheetsCapturer),
+      hasGrid: !!document.getElementById('waffle-grid-container'),
+    })
+    const capturer = /** @type {any} */ (window).__SheetsCapturer
+    if (capturer && document.getElementById('waffle-grid-container')) {
+      capturer.capture()
+    }
+  }
   if (message.type === 'getSheetKey') {
     const sheetKey =
       typeof locator.getSheetKey === 'function' ? locator.getSheetKey() : 'default'
     sendResponse({ sheetKey })
+    return true
   }
-  return true
 })

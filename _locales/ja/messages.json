@@ -13,6 +13,9 @@
     "message": "行と列ハイライト切り替え"
   },
   "slidesFitToScreenDescription": {
-    "message": "Google スライド: 画面に合わせる (Ctrl+Alt+[ を送信)"
+    "message": "Google スライド: 画面に合わせる"
+  },
+  "captureSelectionDescription": {
+    "message": "選択範囲を画像としてキャプチャ"
   }
 }
